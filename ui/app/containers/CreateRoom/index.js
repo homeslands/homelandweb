@@ -30,7 +30,6 @@ import { changeStoreData, putCreateRoom } from './actions';
 import makeSelectCreateRoom from './selectors';
 import reducer from './reducer';
 import saga from './saga';
-import styles from './style.module.scss';
 import messages from './messages';
 
 export function CreateRoom(props) {
