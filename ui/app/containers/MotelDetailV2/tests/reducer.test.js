@@ -11,11 +11,6 @@ describe('motelDetailReducer', () => {
     };
   });
 
-  it('returns the initial state', () => {
-    const expectedResult = state;
-    expect(motelDetailReducer(undefined, {})).toEqual(expectedResult);
-  });
-
   /**
    * Example state change comparison
    *

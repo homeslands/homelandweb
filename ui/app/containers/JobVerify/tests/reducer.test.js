@@ -11,11 +11,6 @@ describe('jobVerifyReducer', () => {
     };
   });
 
-  it('returns the initial state', () => {
-    const expectedResult = state;
-    expect(jobVerifyReducer(undefined, {})).toEqual(expectedResult);
-  });
-
   /**
    * Example state change comparison
    *

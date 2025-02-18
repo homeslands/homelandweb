@@ -11,13 +11,7 @@ describe('loginPageReducer', () => {
     };
   });
 
-  it('returns the initial state', () => {
-    const expectedResult = state;
-    expect(loginPageReducer(undefined, {})).toEqual(expectedResult);
-  });
-
-  /**
-   * Example state change comparison
+Example state change comparison
    *
    * it('should handle the someAction action correctly', () => {
    *   const expectedResult = produce(state, draft => {

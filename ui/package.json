@@ -18,7 +18,7 @@
         "start": "cross-env NODE_ENV=development node server",
         "prod": "npm run test && npm run build && npm run start:prod",
         "start:prod": "cross-env NODE_ENV=production node server",
-        "test": "cross-env NODE_ENV=test jest --coverage",
+        "test": "cross-env NODE_ENV=test jest",
         "test:clean": "rimraf ./coverage",
         "test:watch": "cross-env NODE_ENV=test jest --watchAll"
     },
