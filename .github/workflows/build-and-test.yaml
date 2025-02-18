@@ -1,0 +1,46 @@
+name: build-and-test
+
+on:
+  pull_request: # Trigger on pull request creation and updates
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js for FE
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - name: Install FE dependencies
+        working-directory: ./ui
+        run: npm install
+
+      - name: Build FE
+        working-directory: ./ui
+        run: npm run build
+
+      - name: Run FE tests
+        working-directory: ./ui
+        run: npm run test
+
+      - name: Set up Node.js for BE
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - name: Install BE dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Build BE
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Run BE tests
+        working-directory: ./backend
+        run: npm run test

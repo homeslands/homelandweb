@@ -1,0 +1,105 @@
+.create-motel-wrapper {
+    .react-datepicker-popper {
+        left: -45px !important;
+    }
+    .react-datepicker-wrapper {
+        width: 100%;
+    }
+    .quantity-room {
+        margin-left: 50px;
+    }
+    .status-wrapper {
+        .input-form-wrapper {
+            margin-right: 50px;
+        }
+        position: relative;
+        .status {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding-top: 29px;
+            div {
+                position: absolute;
+                display: inline;
+                padding: 15px 15px;
+                right: 0;
+                border: 1px solid rgba(0, 0, 0, 0.2);
+            }
+            .green-box {
+                background-color: green;
+            }
+            .red-box {
+                background-color: red;
+            }
+            .orange-box {
+                background-color: orange;
+            }
+        }
+    }
+}
+
+.react-datepicker-wrapper {
+    width: 100%;
+}
+
+.identity-status {
+    margin-top: 10px;
+    color: green;
+    font-weight: bold;
+    text-align: center;
+}
+
+.image-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    .image-inner {
+        width: 50%;
+        & > img {
+            width: 100%;
+        }
+    }
+}
+
+.modal-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.modal__description {
+    font-size: 1rem;
+    font-weight: normal;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.button-wrapper {
+    display: flex;
+    justify-content: end;
+}
+
+.error__message {
+    color: red;
+    font-size: 14px;
+}
+
+.room_status-label {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.room__note {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: red;
+    &-item {
+        margin: 0;
+        padding-left: 20px;
+    }
+}

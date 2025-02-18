@@ -1,0 +1,82 @@
+.marker-price-wrapper {
+  font-size: 14px;
+  font-weight: '500';
+  color: '#FFFFFF';
+  white-space: 'nowrap';
+  text-align: center;
+
+  .marker-price {
+    padding: 8px 14px;
+    color: white;
+    border-radius: 8px;
+  }
+
+  &::after {
+    content: '\f0d7';
+    font-size: 25px;
+    font-family: FontAwesome;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 23px;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.2));
+  }
+
+}
+
+.motel_tooltip {
+  background-color: #fff !important;
+  padding: 0 !important;
+  z-index: 99999 !important;
+  max-width: 300px !important;
+  border-radius: 100px !important;
+}
+
+.motel__info {
+  background-color: #fff;
+  width: fit-content;
+  display: flex;
+  color: #808080;
+  flex-direction: column;
+
+  &-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &>img {
+      object-fit: cover;
+      width: 100%;
+    }
+  }
+
+  &-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  &-name {
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  &-range-price {
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+  &-phone,
+  &-address {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    white-space: wrap;
+  }
+  &-detail-button {
+    display: block;
+    font-size: 14px;
+  }
+}

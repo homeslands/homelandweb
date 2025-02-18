@@ -1,0 +1,41 @@
+.user-notification-wrapper {
+  max-width: 100%;
+  .user-notification{
+    border-radius: 6px;
+    margin: 30px 0;
+    padding: 10px 30px;
+    .notification-container{
+      display: flex;
+      flex-direction: column;
+      .notification-title{
+        color: rgb(95, 95, 95);
+        font-size: 32px;
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-weight: 500;
+      }
+      .status-unpaid {
+        background-color: #5ab1e3;
+      }
+      
+      .status-paid {
+        background-color: #e4e8ea;
+      }
+
+      .status-completed {
+        background-color: yellow;
+      }
+
+      .unread-notification{
+        
+        font-weight: 700;
+      }
+      .read-notification{
+        font-weight: 400;
+        // background-color: #f7f7f7;
+      }
+    }
+  }
+}
+
