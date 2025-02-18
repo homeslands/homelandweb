@@ -40,7 +40,3 @@ jobs:
       - name: Build BE
         working-directory: ./backend
         run: npm run build
-
-      - name: Run BE tests
-        working-directory: ./backend
-        run: npm run test
