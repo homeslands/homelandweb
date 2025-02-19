@@ -32,7 +32,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p $SSH_PORT$REMOTE_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -p $SSH_PORT $REMOTE_HOST >> ~/.ssh/known_hosts
           export DOCKER_HOST="ssh://$REMOTE_USER@$REMOTE_HOST:$SSH_PORT"
 
           docker compose -f .deploy/docker-compose.prod.yml pull
