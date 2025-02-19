@@ -1,5 +1,6 @@
 services:
   backend:
+    container_name: homeland-api
     image: ghcr.io/homeslands/homeland-api:latest
     restart: unless-stopped
     healthcheck:
@@ -47,6 +48,7 @@ services:
       GMAIL_PASS: ${GMAIL_PASS}
 
   frontend:
+    container_name: homeland-ui
     image: ghcr.io/homeslands/homeland-ui:latest
     restart: unless-stopped
     healthcheck:
