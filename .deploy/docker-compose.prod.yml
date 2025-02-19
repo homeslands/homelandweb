@@ -1,21 +1,61 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: backend
+    image: ghcr.io/homeslands/homeland-api:latest
     restart: unless-stopped
-    command: npm start
-    env_file:
-      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5502/api-docs"]
+      interval: 10s # Increase interval between health checks
+      timeout: 10s # Increase timeout for slower responses
+      retries: 5
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PROTOCOL: ${PROTOCOL}
+      BASE_PATH: ${BASE_PATH}
+      HOMELANDS_BASE_URL: ${HOMELANDS_BASE_URL}
+      PORT: ${PORT}
+      BASE_PATH_CLINET1: ${BASE_PATH_CLINET1}
+      BASE_PATH_CLINET3: ${BASE_PATH_CLINET3}
+      MONGO_DB_URI: ${MONGO_DB_URI}
+      DEFAULT_TENANT_CODE: ${DEFAULT_TENANT_CODE}
+      MONGO_DB_URI_SMART: ${MONGO_DB_URI_SMART}
+      SMART_TENANT_CODE: ${SMART_TENANT_CODE}
+      MONGO_DB_URI_HOMEKEY: ${MONGO_DB_URI_HOMEKEY}
+      HOMEKEY_TENANT_CODE: ${HOMEKEY_TENANT_CODE}
+      AGENDA_MONGO_DB_URI: ${AGENDA_MONGO_DB_URI}
+      AGENDA_DEFAULT_TENANT_CODE: ${AGENDA_DEFAULT_TENANT_CODE}
+      JWT_SECRET: ${JWT_SECRET}
+      HASH_SALT: ${HASH_SALT}
+      LOCAL_IMAGE_SAVE_PATH: ${LOCAL_IMAGE_SAVE_PATH}
+      LOCAL_IMAGE_UPLOAD_SIZE_LIMIT: ${LOCAL_IMAGE_UPLOAD_SIZE_LIMIT}
+      ENERGY_API_KEY: ${ENERGY_API_KEY}
+      ENERGY_BASE_URL: ${ENERGY_BASE_URL}
+      WEB_BASE_URL: ${WEB_BASE_URL}
+      WEB_BASE_URL_USER: ${WEB_BASE_URL_USER}
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE}
+      AVAILABLE_LANGUAGE_LIST: ${AVAILABLE_LANGUAGE_LIST}
+      GOOGLE_MAP_API_KEY: ${GOOGLE_MAP_API_KEY}
+      DEFAULT_CURRENCY_UNIT: ${DEFAULT_CURRENCY_UNIT}
+      DEFAULT_CURRENCY_CODE: ${DEFAULT_CURRENCY_CODE}
+      VNP_TMNCODE: ${VNP_TMNCODE}
+      VNP_HASHSECRET: ${VNP_HASHSECRET}
+      VNP_URL: ${VNP_URL}
+      VNP_RETURN_URL: ${VNP_RETURN_URL}
+      CLOUDINARY_NAME: ${CLOUDINARY_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      GMAIL_USER: ${GMAIL_USER}
+      GMAIL_PASS: ${GMAIL_PASS}
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: frontend
+    image: ghcr.io/homeslands/homeland-ui:latest
     restart: unless-stopped
-    ports:
-      - "80:80"
-    env_file:
-      - .env
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3006"] # TCP check on port 3006
+      interval: 10s # Increase interval between health checks
+      timeout: 10s # Increase timeout for slower responses
+      retries: 5
+
+networks:
+  default:
+    external: true
+    name: scoobydoo
