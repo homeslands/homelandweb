@@ -52,7 +52,7 @@ jobs:
         with:
           context: ./backend
           file: ./.build/backend/Dockerfile
-          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/=homeland-api:latest
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/homeland-api:latest
           labels: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/homeland-api
           push: true
 
