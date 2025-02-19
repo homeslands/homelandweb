@@ -16,6 +16,7 @@ import {
 export function* apiPostSignIn(payload) {
   const { payload: data = {} } = payload;
   const requestUrl = urlLink.api.serverUrl + urlLink.api.auth.sign_in;
+  console.log({ requestUrl });
   yield put(loadRepos());
   try {
     const response = yield axios.post(requestUrl, data);
