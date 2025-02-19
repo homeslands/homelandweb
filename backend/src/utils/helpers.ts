@@ -71,10 +71,10 @@ const helpers = {
     const webBaseUrlUser = global.env.webBaseUrlUser;
 
     if (role === "customer") {
-      return `${webBaseUrlUser}auth/${type}?code=${code}`;
+      return `${webBaseUrlUser}/auth/${type}?code=${code}`;
     }
 
-    return `${webBaseUrl}${type}?code=${code}`;
+    return `${webBaseUrl}/${type}?code=${code}`;
   },
 
   getImageUrl: (images: any, isMultiple?: boolean): any => {

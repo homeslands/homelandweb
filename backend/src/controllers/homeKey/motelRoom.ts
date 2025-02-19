@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-const fetch = require('node-fetch');
-import axios from 'axios';
+const fetch = require("node-fetch");
+import axios from "axios";
 import GoogleMapService from "../../services/googleMap";
 import ImageService from "../../services/image";
 import HttpResponse from "../../services/response";
@@ -115,8 +115,8 @@ export default class MotelRoomController {
       condition = [
         {
           $match: {
-            isAcceptedByAdmin: true
-          }
+            isAcceptedByAdmin: true,
+          },
         },
         {
           $lookup: {
@@ -180,14 +180,14 @@ export default class MotelRoomController {
       condition.push({
         $group: {
           _id: "$_id",
-          doc: { $first: "$$ROOT" }
-        }
+          doc: { $first: "$$ROOT" },
+        },
       });
-      
+
       condition.push({
         $replaceRoot: {
-          newRoot: "$doc"
-        }
+          newRoot: "$doc",
+        },
       });
 
       const data = helpers.changeTimeZone(
@@ -225,7 +225,7 @@ export default class MotelRoomController {
         }
       }
 
-            // const listMotelByAddress = [];
+      // const listMotelByAddress = [];
       // for(let i = 0; i < listAddress.length; i++) {
       //   let motel = await motelRoomModel.findOne({
       //     address: listAddress[i]._id,
@@ -292,8 +292,6 @@ export default class MotelRoomController {
     }
   }
 
-  
-
   static async getMotelRoomPendingCensorList(
     req: Request,
     res: Response,
@@ -316,7 +314,7 @@ export default class MotelRoomController {
           $match: {
             isAcceptedByAdmin: false,
             isDeleted: false,
-          }
+          },
         },
         {
           $lookup: {
@@ -409,8 +407,8 @@ export default class MotelRoomController {
               }
             }
           }
-          if(resData["data"][i].owner) {
-            if(resData["data"][i].owner.backId) {
+          if (resData["data"][i].owner) {
+            if (resData["data"][i].owner.backId) {
               const backId = await imageModel.findOne({
                 _id: resData["data"][i].owner.backId,
               });
@@ -420,7 +418,7 @@ export default class MotelRoomController {
                 );
               }
             }
-            if(resData["data"][i].owner.frontId) {
+            if (resData["data"][i].owner.frontId) {
               const frontId = await imageModel.findOne({
                 _id: resData["data"][i].owner.frontId,
               });
@@ -430,7 +428,7 @@ export default class MotelRoomController {
                 );
               }
             }
-            if(resData["data"][i].owner.avatar) {
+            if (resData["data"][i].owner.avatar) {
               const avatar = await imageModel.findOne({
                 _id: resData["data"][i].owner.avatar,
               });
@@ -462,8 +460,8 @@ export default class MotelRoomController {
         address: addressModel,
       } = global.mongoModel;
       const { body: data } = req;
-      console.log({data});
-      console.log("akjdjhfka", req.body)
+      console.log({ data });
+      console.log("akjdjhfka", req.body);
       // const motelData = await motelRoomModel.find({ name: { $regex: data.name, $options: 'i' } }).lean().exec();
 
       //NAME
@@ -487,9 +485,8 @@ export default class MotelRoomController {
       //   }
       // }).lean().exec();
 
-
-      //utilities: 
-      // let defaultUtilities = 
+      //utilities:
+      // let defaultUtilities =
       // ["wifi","bon_cau", "dieu_hoa", "truyen_hinh", "voi_hoa_sen",
       //   "giat_ui", "giu_xe", "gac_lung", "bon_rua_mat", "don_phong",
       //   "san_go", "tu_quan_ao", "gio_giac_tu_do", "loi_di_rieng"];
@@ -526,7 +523,7 @@ export default class MotelRoomController {
       //       matchedUtilitiesCount: 0
       //     }
       //   }
-      // ]; 
+      // ];
       // const motelDataUtilities = await motelRoomModel.aggregate(queryUtilities);
 
       // const handlePlaceSelect = async (place) => {
@@ -577,13 +574,25 @@ export default class MotelRoomController {
       // };
 
       //TONG
-      let defaultUtilities = 
-      ["wifi","bon_cau", "dieu_hoa", "truyen_hinh", "voi_hoa_sen",
-        "giat_ui", "giu_xe", "gac_lung", "bon_rua_mat", "don_phong",
-        "san_go", "tu_quan_ao", "gio_giac_tu_do", "loi_di_rieng"];
+      let defaultUtilities = [
+        "wifi",
+        "bon_cau",
+        "dieu_hoa",
+        "truyen_hinh",
+        "voi_hoa_sen",
+        "giat_ui",
+        "giu_xe",
+        "gac_lung",
+        "bon_rua_mat",
+        "don_phong",
+        "san_go",
+        "tu_quan_ao",
+        "gio_giac_tu_do",
+        "loi_di_rieng",
+      ];
 
-      if(data.utilities) {
-        if(data.utilities.length > 0) {
+      if (data.utilities) {
+        if (data.utilities.length > 0) {
           defaultUtilities = data.utilities;
         }
       }
@@ -591,65 +600,65 @@ export default class MotelRoomController {
         {
           $match: {
             utilities: {
-              $elemMatch: { $in: defaultUtilities }
+              $elemMatch: { $in: defaultUtilities },
             },
             minPrice: {
               $gte: data.minPrice,
               $lte: data.maxPrice,
-            }
-          }
+            },
+          },
         },
         {
           $addFields: {
             matchedUtilitiesCount: {
               $size: {
-                $setIntersection: ["$utilities", defaultUtilities]
-              }
-            }
-          }
+                $setIntersection: ["$utilities", defaultUtilities],
+              },
+            },
+          },
         },
         {
           $sort: {
-            matchedUtilitiesCount: -1
-          }
+            matchedUtilitiesCount: -1,
+          },
         },
         {
           $lookup: {
-            from: 'addresses', // Tên của collection chứa địa chỉ
-            localField: 'address', // Trường trong motelRoomModel chứa _id của địa chỉ
-            foreignField: '_id', // Trường _id trong collection addresses
-            as: 'address' // Tên trường mới chứa dữ liệu được populate
-          }
+            from: "addresses", // Tên của collection chứa địa chỉ
+            localField: "address", // Trường trong motelRoomModel chứa _id của địa chỉ
+            foreignField: "_id", // Trường _id trong collection addresses
+            as: "address", // Tên trường mới chứa dữ liệu được populate
+          },
         },
         {
           $unwind: {
             path: "$address",
-            preserveNullAndEmptyArrays: true // Giữ lại document nếu không có địa chỉ phù hợp
-          }
+            preserveNullAndEmptyArrays: true, // Giữ lại document nếu không có địa chỉ phù hợp
+          },
         },
         {
           $project: {
-            matchedUtilitiesCount: 0
-          }
-        }
-      ]; 
+            matchedUtilitiesCount: 0,
+          },
+        },
+      ];
 
       let motelData = await motelRoomModel.aggregate(query);
 
       const dataRes = {
         listMotel: motelData,
         // address: address,
-      }
+      };
 
-      const test = await motelRoomModel.find({_id: "6640d72626fe12180875ab82"}).populate("address").lean().exec();
-      console.log({test});
+      const test = await motelRoomModel
+        .find({ _id: "6640d72626fe12180875ab82" })
+        .populate("address")
+        .lean()
+        .exec();
+      console.log({ test });
       console.log(test[0].address);
 
-
-      return HttpResponse.returnSuccessResponse(
-        res,
-        dataRes
-      )
+      return HttpResponse.returnSuccessResponse(res, dataRes);
     } catch (error) {
       next(error);
     }
@@ -662,57 +671,55 @@ export default class MotelRoomController {
   ): Promise<any> {
     try {
       // Init user model`
-      const {
-        motelRoom: motelRoomModel,
-      } = global.mongoModel;
-      
+      const { motelRoom: motelRoomModel } = global.mongoModel;
+
       // const id = req.params.id;
 
-      console.log("TỚI ĐÂYYY")
+      console.log("TỚI ĐÂYYY");
 
       let { body: data } = req;
 
-      console.log({data});
+      console.log({ data });
 
-      if(!data) {
-        return HttpResponse.returnBadRequestResponse(
-          res,
-          "Không có dữ liệu"
-        )
+      if (!data) {
+        return HttpResponse.returnBadRequestResponse(res, "Không có dữ liệu");
       }
 
-      const motelData = await motelRoomModel.findOne({_id: data.idMotel}).lean().exec();
+      const motelData = await motelRoomModel
+        .findOne({ _id: data.idMotel })
+        .lean()
+        .exec();
 
-      if(!motelData) {
+      if (!motelData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Tòa nhà không tồn tại"
-        )
+        );
       }
 
-      console.log("alsdkjf", typeof(data.status));
+      console.log("alsdkjf", typeof data.status);
 
-      if(data.status === true) {
+      if (data.status === true) {
         const motelDataUpdate = await motelRoomModel.findOneAndUpdate(
-          {_id: data.idMotel},
+          { _id: data.idMotel },
           {
             isAcceptedByAdmin: true,
           },
-          {new: true}
+          { new: true }
         );
         return HttpResponse.returnSuccessResponse(res, motelDataUpdate);
-      } else if(data.status === false) {
+      } else if (data.status === false) {
         const motelDataUpdate = await motelRoomModel.findOneAndUpdate(
-          {_id: data.idMotel},
+          { _id: data.idMotel },
           {
             isDeleted: true,
             isAcceptedByAdmin: false,
           },
-          {new: true}
+          { new: true }
         );
         return HttpResponse.returnSuccessResponse(res, motelDataUpdate);
       }
-      return HttpResponse.returnSuccessResponse(res, 'hihihi');
+      return HttpResponse.returnSuccessResponse(res, "hihihi");
     } catch (e) {
       next(e);
     }
@@ -726,7 +733,7 @@ export default class MotelRoomController {
     try {
       // Init user model`
       const idOwner = req.params.id;
-      console.log({idOwner});
+      console.log({ idOwner });
 
       const {
         motelRoom: motelRoomModel,
@@ -735,12 +742,16 @@ export default class MotelRoomController {
 
       let resData = [];
 
-      resData = await motelRoomModel.find({owner: idOwner}).populate("address").lean().exec();
+      resData = await motelRoomModel
+        .find({ owner: idOwner })
+        .populate("address")
+        .lean()
+        .exec();
 
-      if(resData) {
-        if(resData.length > 0) {
-          for(let i = 0; i < resData.length; i++) {
-            if (resData[i].images && (resData[i].images.length > 0)) {
+      if (resData) {
+        if (resData.length > 0) {
+          for (let i = 0; i < resData.length; i++) {
+            if (resData[i].images && resData[i].images.length > 0) {
               const dataimg = await imageModel.findOne({
                 _id: resData[i].images[0],
               });
@@ -755,9 +766,9 @@ export default class MotelRoomController {
           }
         }
       }
-      console.log({resData});
+      console.log({ resData });
 
-      if(!resData) {
+      if (!resData) {
         resData = [];
       }
       return HttpResponse.returnSuccessResponse(res, resData);
@@ -1089,13 +1100,16 @@ export default class MotelRoomController {
 
       let { body: data } = req;
 
-      const ownerData = await userModel.findOne({_id: req["userId"]}).lean().exec();
+      const ownerData = await userModel
+        .findOne({ _id: req["userId"] })
+        .lean()
+        .exec();
 
-      if(!ownerData.isCensorHost) {
+      if (!ownerData.isCensorHost) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Tài khoản chủ trọ chưa được phê duyệt, không thể tạo tòa nhà"
-        )
+        );
       }
 
       const googleMap = new GoogleMapService();
@@ -1352,26 +1366,33 @@ export default class MotelRoomController {
       } = global.mongoModel;
       let { id: motelRoomId } = req.params;
 
-      const motelData = await motelRoomModel.findOne({_id: motelRoomId}).lean().exec();
+      const motelData = await motelRoomModel
+        .findOne({ _id: motelRoomId })
+        .lean()
+        .exec();
 
-      if(!motelData) {
+      if (!motelData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Tòa nhà không tồn tại"
-        )
+        );
       }
 
-      if(!motelData.floors) {
+      if (!motelData.floors) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Tòa nhà không có tầng nào"
-        )
+        );
       }
       let floorData = [];
       const floors = motelData.floors;
-      for(let i = 0; i<floors.length; i ++) {
-        let floor = await floorModel.findOne({_id: floors[i]}).populate("rooms").lean().exec();
-        if(floor) {
+      for (let i = 0; i < floors.length; i++) {
+        let floor = await floorModel
+          .findOne({ _id: floors[i] })
+          .populate("rooms")
+          .lean()
+          .exec();
+        if (floor) {
           floorData.push(floor);
         }
       }
@@ -1395,37 +1416,44 @@ export default class MotelRoomController {
         motelRoom: motelRoomModel,
       } = global.mongoModel;
       let { id: motelRoomId, floor } = req.params;
-      const indexFloor : number = parseInt(floor);
-      console.log({floor});
+      const indexFloor: number = parseInt(floor);
+      console.log({ floor });
 
-      const motelData = await motelRoomModel.findOne({_id: motelRoomId}).lean().exec();
-      if(!motelData) {
+      const motelData = await motelRoomModel
+        .findOne({ _id: motelRoomId })
+        .lean()
+        .exec();
+      if (!motelData) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
-      if(!motelData.floors) {
+      if (!motelData.floors) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
-      if(motelData.floors.length === 0) {
+      if (motelData.floors.length === 0) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
-      if(motelData.floors.length < (indexFloor + 1)) {
+      if (motelData.floors.length < indexFloor + 1) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
-      const floorData = await floorModel.findOne({_id: motelData.floors[indexFloor]}).populate("rooms").lean().exec();
+      const floorData = await floorModel
+        .findOne({ _id: motelData.floors[indexFloor] })
+        .populate("rooms")
+        .lean()
+        .exec();
 
-      if(!floorData) {
+      if (!floorData) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
-      if(!floorData.rooms) {
+      if (!floorData.rooms) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
-      if(floorData.rooms.length === 0) {
+      if (floorData.rooms.length === 0) {
         return HttpResponse.returnSuccessResponse(res, []);
       }
 
@@ -1448,24 +1476,28 @@ export default class MotelRoomController {
       } = global.mongoModel;
       let { id: motelRoomId } = req.params;
 
-      const motelRoomData = await motelRoomModel.findOne({_id: motelRoomId}).populate("address").lean().exec();
+      const motelRoomData = await motelRoomModel
+        .findOne({ _id: motelRoomId })
+        .populate("address")
+        .lean()
+        .exec();
 
-      if(motelRoomData) {
-        if (motelRoomData.images && (motelRoomData.images.length > 0)) {
+      if (motelRoomData) {
+        if (motelRoomData.images && motelRoomData.images.length > 0) {
           let images = [];
-          for(let i = 0; i < motelRoomData.images.length; i++) {
+          for (let i = 0; i < motelRoomData.images.length; i++) {
             const dataimg = await imageModel.findOne({
               _id: motelRoomData.images[i],
             });
             if (dataimg) {
               images.push(await helpers.getImageUrl(dataimg));
-            } 
+            }
           }
           motelRoomData.images = images;
         }
       }
 
-      console.log({motelRoomData});
+      console.log({ motelRoomData });
       return HttpResponse.returnSuccessResponse(res, motelRoomData);
     } catch (e) {
       next(e);
@@ -1511,25 +1543,25 @@ export default class MotelRoomController {
             .populate("backId frontId avatar")
             .lean()
             .exec();
-          console.log({userData});
+          console.log({ userData });
           if (userData) {
-            if(userData.backId) {
+            if (userData.backId) {
               userData.backId = await helpers.getImageUrl(userData.backId);
             }
-            if(userData.frontId) {
+            if (userData.frontId) {
               userData.frontId = await helpers.getImageUrl(userData.frontId);
             }
-            if(userData.avatar) {
+            if (userData.avatar) {
               userData.avatar = await helpers.getImageUrl(userData.avatar);
             }
             jobData[i].user = userData;
           }
 
-          console.log({userData})
+          console.log({ userData });
         }
       }
 
-      console.log({jobData})
+      console.log({ jobData });
 
       return HttpResponse.returnSuccessResponse(res, jobData);
     } catch (e) {
@@ -1715,47 +1747,60 @@ export default class MotelRoomController {
                   }
                 }
                 // if(room.listIdElectricMetter) {
-                  let start : string = moment().startOf("month").format("YYYY-MM-DD");
-                  if(moment(jobData.checkInTime).month() === (moment().month() + 1)) {
-                    start = moment(jobData.checkInTime).format("YYYY-MM-DD");
-                  }
-                  let end: string = moment().format("YYYY-MM-DD");
+                let start: string = moment()
+                  .startOf("month")
+                  .format("YYYY-MM-DD");
+                if (
+                  moment(jobData.checkInTime).month() ===
+                  moment().month() + 1
+                ) {
+                  start = moment(jobData.checkInTime).format("YYYY-MM-DD");
+                }
+                let end: string = moment().format("YYYY-MM-DD");
 
-                  if(startDate !== 'undefined') {
-                    start = moment(startDate).format("YYYY-MM-DD");
-                  }
-                  if(endDate !== 'undefined') {
-                    end = moment(endDate).format("YYYY-MM-DD");
-                  }
-                  
-                  // if(room.listIdElectricMetter.length > 0) {
-                    let electricNumber = 0;
-                    let labelTime: string[] = [];
-                    let kWhData: number[] = [];
+                if (startDate !== "undefined") {
+                  start = moment(startDate).format("YYYY-MM-DD");
+                }
+                if (endDate !== "undefined") {
+                  end = moment(endDate).format("YYYY-MM-DD");
+                }
 
-                    const resResult = await EnergyController.calculateElectricUsedDayToDayHaveLabelTime(
-                      room._id,
-                      start,
-                      end,
-                    );
-                    console.log({resResult})
-                    if(resResult === null) {
-                      electricNumber = 0;
-                      jobData[i].electricNumber = electricNumber;
-                      jobData[i].labelTime = labelTime;
-                      jobData[i].kWhData = kWhData;
-                      jobData[i].dayStart = moment(new Date(start)).format("DD/MM/YYYY");
-                      jobData[i].dayEnd = moment(new Date(end)).format("DD/MM/YYYY");
-                    } else {
-                      electricNumber = resResult.totalkWhTime;
-                      jobData[i].electricNumber = electricNumber;
-                      labelTime = resResult.labelTime;
-                      kWhData = resResult.kWhData;
-                      jobData[i].labelTime = labelTime;
-                      jobData[i].kWhData = kWhData;
-                      jobData[i].dayStart = moment(new Date(start)).format("DD/MM/YYYY");
-                      jobData[i].dayEnd = moment(new Date(end)).format("DD/MM/YYYY");
-                    }
+                // if(room.listIdElectricMetter.length > 0) {
+                let electricNumber = 0;
+                let labelTime: string[] = [];
+                let kWhData: number[] = [];
+
+                const resResult = await EnergyController.calculateElectricUsedDayToDayHaveLabelTime(
+                  room._id,
+                  start,
+                  end
+                );
+                console.log({ resResult });
+                if (resResult === null) {
+                  electricNumber = 0;
+                  jobData[i].electricNumber = electricNumber;
+                  jobData[i].labelTime = labelTime;
+                  jobData[i].kWhData = kWhData;
+                  jobData[i].dayStart = moment(new Date(start)).format(
+                    "DD/MM/YYYY"
+                  );
+                  jobData[i].dayEnd = moment(new Date(end)).format(
+                    "DD/MM/YYYY"
+                  );
+                } else {
+                  electricNumber = resResult.totalkWhTime;
+                  jobData[i].electricNumber = electricNumber;
+                  labelTime = resResult.labelTime;
+                  kWhData = resResult.kWhData;
+                  jobData[i].labelTime = labelTime;
+                  jobData[i].kWhData = kWhData;
+                  jobData[i].dayStart = moment(new Date(start)).format(
+                    "DD/MM/YYYY"
+                  );
+                  jobData[i].dayEnd = moment(new Date(end)).format(
+                    "DD/MM/YYYY"
+                  );
+                }
               }
             }
 
@@ -1765,9 +1810,9 @@ export default class MotelRoomController {
         }
       }
 
-      console.log({startDate});
-      console.log({endDate});
-      console.log({resData});
+      console.log({ startDate });
+      console.log({ endDate });
+      console.log({ resData });
 
       return HttpResponse.returnSuccessResponse(res, resData);
     } catch (e) {
@@ -2088,7 +2133,7 @@ export default class MotelRoomController {
   static async updateMotelRoom(motelRoomId: any, rawData: any): Promise<any> {
     let data = rawData.formData;
     console.log("data updateMotelRoom", data);
-    
+
     if (!data.address.address) {
       const googleMap = new GoogleMapService();
       const googleMapData = await googleMap.getAddressDetail(data.address);
@@ -2098,17 +2143,21 @@ export default class MotelRoomController {
       data["address"] = addressData._id;
     }
 
-    const { 
+    const {
       motelRoom: motelRoomModel,
       address: addressModel,
     } = global.mongoModel;
 
-    let motelData = await motelRoomModel.findOne({_id: motelRoomId}).populate("address").lean().exec();
+    let motelData = await motelRoomModel
+      .findOne({ _id: motelRoomId })
+      .populate("address")
+      .lean()
+      .exec();
     let addressLegacyId = null;
-    if(motelData) {
-      if(motelData.address) {
-        if(motelData.address.address) {
-          if(motelData.address.address !== data.address.address) {
+    if (motelData) {
+      if (motelData.address) {
+        if (motelData.address.address) {
+          if (motelData.address.address !== data.address.address) {
             addressLegacyId = motelData.address._id;
           }
         }
@@ -2120,19 +2169,19 @@ export default class MotelRoomController {
     data["price"] = (data.minPrice + data.maxPrice) / 2;
 
     const motelDataN = await motelRoomModel
-    .findOneAndUpdate({ _id: motelRoomId }, data, { new: true })
-    .populate([
-      {
-        path: "floors",
-        populate: "rooms",
-      },
-    ])
-    .populate("address")
-    .lean()
-    .exec();
+      .findOneAndUpdate({ _id: motelRoomId }, data, { new: true })
+      .populate([
+        {
+          path: "floors",
+          populate: "rooms",
+        },
+      ])
+      .populate("address")
+      .lean()
+      .exec();
 
-    if(addressLegacyId) {
-      await addressModel.remove({_id: addressLegacyId});
+    if (addressLegacyId) {
+      await addressModel.remove({ _id: addressLegacyId });
     }
 
     return motelDataN;
@@ -2201,7 +2250,7 @@ export default class MotelRoomController {
     res: Response,
     next: NextFunction
   ): Promise<any> {
-    console.log("ĐÃ TẢI XONG HÓA ĐƠN")
+    console.log("ĐÃ TẢI XONG HÓA ĐƠN");
     try {
       const { banking: BankingModel, image: imageModel } = global.mongoModel;
       const data = [];
@@ -2212,7 +2261,7 @@ export default class MotelRoomController {
       // insert db
       const ress = await BillController.insertDb(json, req["userId"]);
 
-      console.log("ress", ress)
+      console.log("ress", ress);
       if (ress && ress.error) {
         return HttpResponse.returnBadRequestResponse(
           res,
@@ -2248,7 +2297,7 @@ export default class MotelRoomController {
     next: NextFunction
   ): Promise<any> {
     try {
-      const { 
+      const {
         banking: BankingModel,
         image: imageModel,
         job: jobModel,
@@ -2266,22 +2315,26 @@ export default class MotelRoomController {
       console.log("json", json.idRoom);
       console.log("json", json.idUser);
 
-      const jobData = await jobModel.findOne({
-        isDeleted: false,
-        room: json.idRoom,
-        // user: json.idUser,
-        isCompleted: true,
-      }).populate("currentOrder").lean().exec();
+      const jobData = await jobModel
+        .findOne({
+          isDeleted: false,
+          room: json.idRoom,
+          // user: json.idUser,
+          isCompleted: true,
+        })
+        .populate("currentOrder")
+        .lean()
+        .exec();
 
-      if(!jobData) {
+      if (!jobData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Hợp đồng không tồn tại"
-        )
+        );
       }
 
-      if(jobData.currentOrder) {
-        if(jobData.currentOrder.isCompleted === true) {
+      if (jobData.currentOrder) {
+        if (jobData.currentOrder.isCompleted === true) {
           const orderData = await orderModel.create({
             user: json.idUser,
             job: jobData._id,
@@ -2307,7 +2360,7 @@ export default class MotelRoomController {
             kWhData: json.kWhData,
             labelTime: json.labelTime,
           });
-  
+
           const jobDataN = await jobModel.findOneAndUpdate(
             { _id: jobData._id },
             {
@@ -2318,56 +2371,71 @@ export default class MotelRoomController {
             { new: true }
           );
 
-          const roomData = await roomModel.findOne({_id: json.idRoom}).lean().exec();
+          const roomData = await roomModel
+            .findOne({ _id: json.idRoom })
+            .lean()
+            .exec();
 
-          const floorData = await floorModel.findOne({rooms: json.idRoom}).lean().exec();
+          const floorData = await floorModel
+            .findOne({ rooms: json.idRoom })
+            .lean()
+            .exec();
 
-          const motelData = await motelRoomModel.findOne({floors: floorData._id}).lean().exec();
+          const motelData = await motelRoomModel
+            .findOne({ floors: floorData._id })
+            .lean()
+            .exec();
 
           const energy = {
             labelTime: json.labelTime,
             kWhData: json.kWhData,
-          }
+          };
 
-          // CHIA LÀM 3 LOẠI: 
+          // CHIA LÀM 3 LOẠI:
           // chưa hết hạn mà rời đi -> trả cọc
           // chưa hết hạn mà rời đi -> không trả cọc
           // bị miss hóa đơn chạy tự động, tạo bằng tay
-          
+
           //sửa hạn
           //thêm task kiểm tra
           //thêm thông báo cho người dùng
           await NotificationController.createNotification({
             title: "Thông báo thanh toán hóa đơn phòng",
-            
+
             content: `Vui lòng thực hiện thanh toán hóa đơn cho phòng ${roomData.name} thuộc dãy ${motelData.name} của 
             quý khách.`,
 
             type: "monthly",
             user: roomData.rentedBy,
             isRead: false,
-            url: `${process.env.BASE_PATH_CLINET3}job-detail/${jobDataN._id}/${roomData._id}`,
+            url: `${process.env.BASE_PATH_CLINET3}/job-detail/${jobDataN._id}/${roomData._id}`,
             tag: "Order",
             contentTag: orderData._id,
           });
-    
+
           const banking = [];
           // const buffer = await generateOrderMonthlyPendingPayPDF(json,banking, energy);
-          const buffer = await getBufferOrderMonthly(orderData, jobData, roomData, floorData);
+          const buffer = await getBufferOrderMonthly(
+            orderData,
+            jobData,
+            roomData,
+            floorData
+          );
 
           res.setHeader("Content-Type", "application/pdf");
-          res.setHeader("Content-Dispsition", "attachment;filename=" + fileName);
+          res.setHeader(
+            "Content-Dispsition",
+            "attachment;filename=" + fileName
+          );
           res.send(buffer);
-          
         } else {
-          console.log("Chwua thanh toan")
+          console.log("Chwua thanh toan");
           return HttpResponse.returnBadRequestResponse(
             res,
             "Hóa đơn hiện tại chưa được thanh toán, vui lòng yêu cầu khách hàng thanh toán trước khi tạo hóa đơn tiếp theo"
-          )
+          );
         }
       }
-
     } catch (e) {
       next(e);
     }
@@ -2526,7 +2594,7 @@ export default class MotelRoomController {
             // },
             {
               $addToSet: {
-                images: uploadResults.imageId
+                images: uploadResults.imageId,
               },
             },
             {
@@ -2591,11 +2659,11 @@ export default class MotelRoomController {
           );
         }
 
-        console.log({uploadResults});
+        console.log({ uploadResults });
 
         const dataIMG = resDataOld.images || [];
         dataIMG.push(uploadResults.imageId);
-        console.log({dataIMG});
+        console.log({ dataIMG });
 
         resData = await roomModel
           .findOneAndUpdate(
@@ -2605,7 +2673,7 @@ export default class MotelRoomController {
             // },
             {
               $addToSet: {
-                images: uploadResults.imageId
+                images: uploadResults.imageId,
               },
             },
             {
@@ -2624,12 +2692,19 @@ export default class MotelRoomController {
   }
 
   //note
-  static async getBuildingListByHost(req: Request, res: Response, next: NextFunction): Promise<any> {
+  static async getBuildingListByHost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
     const id = req.params.id;
     console.log("id", id);
     console.log("-------------------------------------------");
 
-    const { motelRoom: motelRoomModel, address: addressModel } = global.mongoModel;
+    const {
+      motelRoom: motelRoomModel,
+      address: addressModel,
+    } = global.mongoModel;
 
     try {
       const resData = await motelRoomModel
@@ -2640,25 +2715,29 @@ export default class MotelRoomController {
 
       console.log("resDataaa: ", resData);
 
-      const formattedData = await Promise.all(resData.map(async (element) => {
-        console.log("element", element);
+      const formattedData = await Promise.all(
+        resData.map(async (element) => {
+          console.log("element", element);
 
-        const addressId = mongoose.Types.ObjectId(element.address);
-        const addressData = await addressModel.findOne({ _id: element.address }).lean().exec();
-        if (addressData) {
-          console.log("check doc: ", element)
-          return {
-            ...element,
-            addressName: addressData.address,
-
+          const addressId = mongoose.Types.ObjectId(element.address);
+          const addressData = await addressModel
+            .findOne({ _id: element.address })
+            .lean()
+            .exec();
+          if (addressData) {
+            console.log("check doc: ", element);
+            return {
+              ...element,
+              addressName: addressData.address,
+            };
           }
-        }
 
-        return {
-          ...element._doc,
-          addressName: ''
-        };
-      }));
+          return {
+            ...element._doc,
+            addressName: "",
+          };
+        })
+      );
       console.log("formattedData", formattedData);
 
       return HttpResponse.returnSuccessResponse(res, formattedData);
@@ -2667,13 +2746,9 @@ export default class MotelRoomController {
     }
   }
 
-
-
-
   /* -------------------------------------------------------------------------- */
   /*                             END HELPER FUNCTION                            */
   /* -------------------------------------------------------------------------- */
-
 }
 async function generatePDF(json, banking) {
   console.log("banking", banking);
@@ -3015,13 +3090,12 @@ async function generatePDF(json, banking) {
   });
 }
 
-
 async function getBufferOrderMonthly(
   orderData: any,
   jobData: any,
   roomData: any,
-  floorData: any,
-): Promise<any>{
+  floorData: any
+): Promise<any> {
   const {
     motelRoom: motelRoomModel,
     room: roomModel,
@@ -3034,8 +3108,12 @@ async function getBufferOrderMonthly(
     floor: floorModel,
     totalKwh: totalKwhModel,
   } = global.mongoModel;
-  const motelData = await motelRoomModel.findOne({floors: floorData._id}).populate("owner address").lean().exec();
-  console.log({motelData});
+  const motelData = await motelRoomModel
+    .findOne({ floors: floorData._id })
+    .populate("owner address")
+    .lean()
+    .exec();
+  console.log({ motelData });
 
   const motelOwner = motelData.owner;
   const emailOwner = motelOwner.email;
@@ -3043,7 +3121,10 @@ async function getBufferOrderMonthly(
     motelOwner.phoneNumber.countryCode + motelOwner.phoneNumber.number;
   const addressOwner = motelOwner.address;
 
-  const adminData = await userModel.findOne({role: "master"}).lean().exec();
+  const adminData = await userModel
+    .findOne({ role: "master" })
+    .lean()
+    .exec();
 
   let banking = await BankingModel.find({ user: adminData._id }) //trả về mảng
     .lean()
@@ -3053,13 +3134,19 @@ async function getBufferOrderMonthly(
   //   .exec();
 
   //Nếu đã yêu cầu thanh toán => đã có transaction => đã chọn ngân hàng
-  const transactionData = await TransactionsModel.findOne({order: orderData._id}).lean().exec();
-  if(transactionData) {
-    let tempBanking = await BankingModel.findOne({ _id: transactionData.banking })
+  const transactionData = await TransactionsModel.findOne({
+    order: orderData._id,
+  })
     .lean()
     .exec();
+  if (transactionData) {
+    let tempBanking = await BankingModel.findOne({
+      _id: transactionData.banking,
+    })
+      .lean()
+      .exec();
 
-    if(tempBanking) {
+    if (tempBanking) {
       banking = [];
       banking.push(tempBanking);
     }
@@ -3069,11 +3156,13 @@ async function getBufferOrderMonthly(
   const motelAddress = motelData.address.address;
   const nameRoom = roomData.name;
 
-  if(orderData.type === "monthly")  {
-    const totalkWhTime = await totalKwhModel.findOne({
-      order: orderData._id,
-    }).lean().exec();
-
+  if (orderData.type === "monthly") {
+    const totalkWhTime = await totalKwhModel
+      .findOne({
+        order: orderData._id,
+      })
+      .lean()
+      .exec();
 
     // // //Thông số
     const idBill: string = orderData.keyOrder;
@@ -3106,8 +3195,12 @@ async function getBufferOrderMonthly(
 
     const parsedTime = moment(new Date(orderData.createdAt)).format("DD/MM/YY"); //ngày tạo
 
-    const expireTime = moment(new Date(orderData.expireTime)).format("DD/MM/YYYY");
-    const startTime = moment(new Date(orderData.createdAt)).format("DD/MM/YYYY");
+    const expireTime = moment(new Date(orderData.expireTime)).format(
+      "DD/MM/YYYY"
+    );
+    const startTime = moment(new Date(orderData.createdAt)).format(
+      "DD/MM/YYYY"
+    );
 
     let json = {};
 
@@ -3120,17 +3213,14 @@ async function getBufferOrderMonthly(
 
       const nameUser = userInfor.lastName + userInfor.firstName;
       const phoneUser =
-        userInfor.phoneNumber.countryCode +
-        " " +
-        userInfor.phoneNumber.number;
+        userInfor.phoneNumber.countryCode + " " + userInfor.phoneNumber.number;
       const addressUser = userInfor.address;
       const emailUser = userInfor.email;
-
 
       json = {
         numberDayStay: numberDayStay,
 
-        idBill: idBill, 
+        idBill: idBill,
         phoneOwner,
         startTime: startTime,
         expireTime: expireTime,
@@ -3188,10 +3278,18 @@ async function getBufferOrderMonthly(
         totalOther: typeOther * unitPriceOther,
       };
 
-      const nameFile = `Invoice - ${nameMotel} - ${nameRoom} from ${moment(new Date(orderData.startTime)).format("DD-MM-YYYY")} to ${moment(new Date(orderData.endTime)).format("DD-MM-YYYY")}`;
+      const nameFile = `Invoice - ${nameMotel} - ${nameRoom} from ${moment(
+        new Date(orderData.startTime)
+      ).format("DD-MM-YYYY")} to ${moment(new Date(orderData.endTime)).format(
+        "DD-MM-YYYY"
+      )}`;
       let fileName = `${nameFile}.pdf`;
 
-      const buffer = await generateOrderMonthlyPendingPayPDF(json, banking[0], totalkWhTime);
+      const buffer = await generateOrderMonthlyPendingPayPDF(
+        json,
+        banking[0],
+        totalkWhTime
+      );
 
       // Export chartjs to pdf
       // const configuration: ChartConfiguration = {
@@ -3278,13 +3376,16 @@ async function getBufferOrderMonthly(
       // const mergedBuffer = await mergeBuffer(buffer, chartBufferPNG);
       // console.log({ mergedBuffer: Buffer.from(mergedBuffer) });
 
-      
       // res.send(mergedBuffer);
       return buffer;
     }
   }
 }
-async function generateOrderMonthlyPendingPayPDF(json, banking, energy): Promise<Buffer> {
+async function generateOrderMonthlyPendingPayPDF(
+  json,
+  banking,
+  energy
+): Promise<Buffer> {
   console.log({ banking });
   return new Promise((resolve, reject) => {
     let fontpathnormal = __dirname + "/fonts/roboto/Roboto-Regular.ttf";
@@ -3755,5 +3856,3 @@ async function generateOrderMonthlyPendingPayPDF(json, banking, energy): Promise
     pdfDoc.end();
   });
 }
-
-

@@ -224,14 +224,10 @@ export default class AuthController {
       // Parse error list form validation results
       const errorList = normalizeError(validateResults);
 
-      
-
       // Validation Error
       if (errorList.length > 0) {
         return HttpResponse.returnBadRequestResponse(res, errorList);
       }
-
-      
 
       // Check if password and confirm password is matched
       if (data.password !== data.confirmPassword) {
@@ -280,7 +276,7 @@ export default class AuthController {
         data.role.push("customer");
       }
 
-      if(data.role.includes("host")) {
+      if (data.role.includes("host")) {
         data["isCensorHost"] = false;
       }
 
@@ -301,8 +297,6 @@ export default class AuthController {
       // Remove password property
       delete resData.password;
       delete resData.social;
-
-      
 
       return HttpResponse.returnSuccessResponse(res, resData);
     } catch (e) {
@@ -354,39 +348,40 @@ export default class AuthController {
    *       404:
    *         description: Resource not found
    */
-  static async checkToken (
+  static async checkToken(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<any> {
     try {
-      const {
-        user: userModel,
-      } = global.mongoModel;
+      const { user: userModel } = global.mongoModel;
       const { body: data } = req;
 
-      if(!data) {
+      if (!data) {
         return HttpResponse.returnSuccessResponse(res, false);
       }
-      if((!data.userId) || (!data.token)) {
-        return HttpResponse.returnSuccessResponse(res, false);
-      }
-
-      const userData = await userModel.findOne({_id: data.userId}).lean().exec();
-
-      if(!userData) {
+      if (!data.userId || !data.token) {
         return HttpResponse.returnSuccessResponse(res, false);
       }
 
-      if(!userData.token) {
+      const userData = await userModel
+        .findOne({ _id: data.userId })
+        .lean()
+        .exec();
+
+      if (!userData) {
         return HttpResponse.returnSuccessResponse(res, false);
       }
 
-      if(userData.token !== data.token) {
+      if (!userData.token) {
         return HttpResponse.returnSuccessResponse(res, false);
       }
 
-      if(!checkTokenExpiration(data.token)) {
+      if (userData.token !== data.token) {
+        return HttpResponse.returnSuccessResponse(res, false);
+      }
+
+      if (!checkTokenExpiration(data.token)) {
         return HttpResponse.returnSuccessResponse(res, false);
       }
 
@@ -991,8 +986,6 @@ export default class AuthController {
                 Mã Xác Nhận: <b>${sttoken}</b>
                 <br/>
                 <a href="${process.env.BASE_PATH_CLINET1}/${email}">Xác nhận 1</a>
-                <br/>
-                <a href="${process.env.BASE_PATH_CLINET2}/${email}">Xác nhận 2</a>
                 `;
 
     await sendMail.sendMail(process.env.Gmail_USER, email, "Mã Xác Nhận", html);
@@ -1151,7 +1144,6 @@ export default class AuthController {
   //   return HttpResponse.returnSuccessResponse(res, userData);
   // }
 
-
   /* -------------------------------------------------------------------------- */
   /*                             END HELPER FUNCTION                            */
   /* -------------------------------------------------------------------------- */
@@ -1163,11 +1155,11 @@ const checkTokenExpiration = (token) => {
     const now = Math.floor(Date.now() / 1000);
 
     if (decoded.exp && decoded.exp > now) {
-        console.log("Token còn hạn");
-        return true;
+      console.log("Token còn hạn");
+      return true;
     } else {
-        console.log("Token đã hết hạn");
-        return false;
+      console.log("Token đã hết hạn");
+      return false;
     }
   } catch (err) {
     console.error("Token không hợp lệ", err);
