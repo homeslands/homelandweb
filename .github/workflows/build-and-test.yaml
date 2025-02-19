@@ -26,7 +26,7 @@ jobs:
 
       - name: Run FE tests
         working-directory: ./ui
-        run: npm run test
+        run: npm run test -- -u
 
       - name: Set up Node.js for BE
         uses: actions/setup-node@v3

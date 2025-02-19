@@ -1,15 +1,7 @@
-import { put } from 'redux-saga/effects';
-
+/* eslint-disable prettier/prettier */
 export const urlLink = {
-  // AUTHENTICATE
   api: {
-    // serverUrl: 'http://115.73.215.28:5502/api',
-    serverUrl: 'http://localhost:5502/api',
-    // serverUrl: 'http://206.189.92.77:8080/api',
-
-    // serverUrl: 'https://homeland-api.projectenergy.cloud/api',
-    // usse dotenv for serverUrl
-    // serverUrl: process.env.REACT_APP_BASE_API_URL,
+    serverUrl: process.env.REACT_APP_BASE_API_URL,
     auth: {
       validateToken: '/v1/auth/checkToken',
       sign_up: '/v1/auth/signUp',

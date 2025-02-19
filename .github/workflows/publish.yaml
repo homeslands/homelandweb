@@ -1,16 +1,21 @@
-name: publish-prod
+name: publish
 
 on:
-  push:
-    tags:
-      - "v*" # This triggers the workflow on any tag
+  pull_request_target:
+    branches: [main]
+    types: [opened, closed]
+  workflow_run:
+    workflows: ["build-and-test"] # Trigger after 'build-and-test' workflow succeeds
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io
   REPOSITORY_OWNER: homeslands
 
 jobs:
-  publish-prod:
+  publish-dev:
+    if: github.event.pull_request.merged
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -30,12 +35,9 @@ jobs:
 
       - name: Copy Environment Configuration
         env:
-          GOOGLE_API_CREDENTIALS: ${{ secrets.GOOGLE_API_CREDENTIALS }}
-          FE_ENV_PROD: ${{ secrets.FE_ENV_PROD }}
+          FE_ENV: ${{ secrets.FE_ENV_DEV }}
         run: |
-          mkdir -p app/order-api/public/json
-          echo "$GOOGLE_API_CREDENTIALS" > app/order-api/public/json/credentials.json
-          echo "$FE_ENV_PROD" > app/order-ui/.env
+          echo "$FE_ENV" > ui/.env
 
       # Step 3: Log in to GitHub Container Registry
       - name: Log in to GitHub Container Registry
@@ -45,20 +47,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push order-api image
+      - name: Build and push api image
         uses: docker/build-push-action@v4
         with:
-          context: ./app/order-api
-          file: ./.build/order-api/Dockerfile
-          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/order-api:latest
-          labels: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/order-api
+          context: ./backend
+          file: ./.build/backend/Dockerfile
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/=homeland-api:latest
+          labels: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/homeland-api
           push: true
 
-      - name: Build and push order-ui image
+      - name: Build and push ui image
         uses: docker/build-push-action@v4
         with:
-          context: ./app/order-ui
-          file: ./.build/order-ui/Dockerfile
-          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/order-ui:latest
-          labels: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/order-ui
+          context: ./ui
+          file: ./.build/ui/Dockerfile
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/homeland-ui:latest
+          labels: ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/homeland-ui
           push: true

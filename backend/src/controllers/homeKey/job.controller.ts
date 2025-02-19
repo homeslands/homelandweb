@@ -654,14 +654,14 @@ export default class JobController {
         type: "cancelDepositByUser",
         user: req["userId"],
         isRead: false,
-        url: `${process.env.BASE_PATH_CLINET3}pay-deposit-user/`,
+        url: `${process.env.BASE_PATH_CLINET3}/pay-deposit-user/`,
         tag: null,
         contentTag: null,
       });
 
       const listOrder = jobData.orders;
-      if(listOrder.length === 1) {
-        if(listOrder[0].isCompleted === true) {
+      if (listOrder.length === 1) {
+        if (listOrder[0].isCompleted === true) {
           await payDepositListModel.create({
             room: jobData.room._id,
             user: jobData.user._id,
@@ -672,8 +672,8 @@ export default class JobController {
             amount: jobData.deposit,
           });
         }
-      } else if(listOrder.length === 2) {
-        if(listOrder[1].isCompleted === true) {
+      } else if (listOrder.length === 2) {
+        if (listOrder[1].isCompleted === true) {
           await payDepositListModel.create({
             room: jobData.room._id,
             user: jobData.user._id,
@@ -905,7 +905,10 @@ export default class JobController {
         availableRoom: lodash.sumBy(motelRoomData.floors, "availableRoom"),
         rentedRoom: lodash.sumBy(motelRoomData.floors, "rentedRoom"),
         depositedRoom: lodash.sumBy(motelRoomData.floors, "depositedRoom"),
-        soonExpireContractRoom: lodash.sumBy(motelRoomData.floors, "soonExpireContractRoom"),
+        soonExpireContractRoom: lodash.sumBy(
+          motelRoomData.floors,
+          "soonExpireContractRoom"
+        ),
       };
 
       await motelRoomModel
@@ -1257,18 +1260,27 @@ export default class JobController {
         amount: resData.afterCheckInCost,
         type: "afterCheckInCost",
         // expireTime: moment(resData.checkInTime).add(7, "days").endOf("day").toDate(),
-        expireTime: moment().add(7, "days").endOf("day").toDate(),
+        expireTime: moment()
+          .add(7, "days")
+          .endOf("day")
+          .toDate(),
       });
 
       await NotificationController.createNotification({
         title: "Thông báo thanh toán khi nhận phòng",
-        content: `Quý khách đã kích hoạt hợp đồng thành công cho phòng ${resData.room.name} thuộc 
-        tòa nhà ${resData.motelRoom.name} .Vui lòng thực hiện thanh toán khi nhận phòng, 
-        hạn cuối tới ngày ${moment(orderData.expireTime).format("DD-MM-YYYY")}.`,
+        content: `Quý khách đã kích hoạt hợp đồng thành công cho phòng ${
+          resData.room.name
+        } thuộc 
+        tòa nhà ${
+          resData.motelRoom.name
+        } .Vui lòng thực hiện thanh toán khi nhận phòng, 
+        hạn cuối tới ngày ${moment(orderData.expireTime).format(
+          "DD-MM-YYYY"
+        )}.`,
         user: resData.user._id,
         isRead: false,
         type: "afterCheckInCost",
-        url: `${process.env.BASE_PATH_CLINET3}job-detail/${resData._id}/${resData.room._id}`,
+        url: `${process.env.BASE_PATH_CLINET3}/job-detail/${resData._id}/${resData.room._id}`,
         tag: "Order",
         contentTag: orderData._id,
       });
@@ -1327,14 +1339,15 @@ export default class JobController {
         availableRoom: lodash.sumBy(motelRoomData.floors, "availableRoom"),
         rentedRoom: lodash.sumBy(motelRoomData.floors, "rentedRoom"),
         depositedRoom: lodash.sumBy(motelRoomData.floors, "depositedRoom"),
-        soonExpireContractRoom: lodash.sumBy(motelRoomData.floors, "soonExpireContractRoom"),
+        soonExpireContractRoom: lodash.sumBy(
+          motelRoomData.floors,
+          "soonExpireContractRoom"
+        ),
       };
 
       await motelRoomModel
         .findOneAndUpdate({ _id: motelRoomData._id }, updateData)
         .exec();
-
-      
 
       await global.agendaInstance.agenda.schedule(
         moment()
@@ -2189,10 +2202,7 @@ export default class JobController {
     res: Response,
     next: NextFunction
   ): Promise<any> {
-    const { 
-      job: jobModel,
-      image: imageModel,
-    } = global.mongoModel;
+    const { job: jobModel, image: imageModel } = global.mongoModel;
     try {
       const idRoom = req.params.idRoom;
       const isDeleted = req.query.isDeleted;
@@ -2200,38 +2210,43 @@ export default class JobController {
       console.log({ isDeleted });
 
       let resData = [];
-      if(isDeleted === "true") {
-        resData = await jobModel.find({
-          room: mongoose.Types.ObjectId(idRoom),
-          isDeleted: true,
-        }).lean().exec();
-      } else if(isDeleted === "false") {
-        resData = await jobModel.find({
-          room: mongoose.Types.ObjectId(idRoom),
-          isDeleted: false,
-        }).lean().exec();
+      if (isDeleted === "true") {
+        resData = await jobModel
+          .find({
+            room: mongoose.Types.ObjectId(idRoom),
+            isDeleted: true,
+          })
+          .lean()
+          .exec();
+      } else if (isDeleted === "false") {
+        resData = await jobModel
+          .find({
+            room: mongoose.Types.ObjectId(idRoom),
+            isDeleted: false,
+          })
+          .lean()
+          .exec();
       }
 
-      if(resData.length > 0) {
-        for(let i = 0; i < resData.length; i++) {
-          if (resData[i].images && (resData[i].images.length > 0)) {
+      if (resData.length > 0) {
+        for (let i = 0; i < resData.length; i++) {
+          if (resData[i].images && resData[i].images.length > 0) {
             let images = [];
 
-            for(let j = 0; j < resData[i].images.length; j++) {
+            for (let j = 0; j < resData[i].images.length; j++) {
               const dataimg = await imageModel.findOne({
                 _id: resData[i].images[j],
               });
               if (dataimg) {
                 images.push(await helpers.getImageUrl(dataimg));
-              } 
+              }
             }
             resData[i].images = images;
           }
-          
         }
       }
 
-      console.log({resData})
+      console.log({ resData });
 
       return HttpResponse.returnSuccessResponse(res, resData);
     } catch (e) {
@@ -2296,7 +2311,7 @@ export default class JobController {
               nextRunAt: { $ne: null },
             });
 
-            if(jobs.length > 0) {
+            if (jobs.length > 0) {
               // task check chưa chạy
               const job = jobs[0];
               job.schedule(
@@ -2308,7 +2323,9 @@ export default class JobController {
             } else {
               // task check đã chạy, tạo job mới
               await global.agendaInstance.agenda.schedule(
-                moment().add(2, "minutes").toDate(),
+                moment()
+                  .add(2, "minutes")
+                  .toDate(),
                 "RemindUserRenewContractAndChangeStatusRoomBeforeOneMonth",
                 { jobId: dataJob._id }
               );
@@ -3061,9 +3078,12 @@ export default class JobController {
         }
 
         //for host
-        const hostData = await userModel.findOne({
-          _id: jobData.motelRoom.owner
-        }).lean().exec();
+        const hostData = await userModel
+          .findOne({
+            _id: jobData.motelRoom.owner,
+          })
+          .lean()
+          .exec();
 
         await NotificationController.createNotification({
           title: "Xác nhận hủy hợp đồng",
@@ -3073,7 +3093,7 @@ export default class JobController {
           type: "cancelContractByHost",
           user: hostData._id,
           isRead: false,
-          url: `${process.env.BASE_PATH_CLINET3}room-detail-update/${jobData.room._id}`,
+          url: `${process.env.BASE_PATH_CLINET3}/room-detail-update/${jobData.room._id}`,
           tag: null,
           contentTag: null,
         });
@@ -3088,15 +3108,14 @@ export default class JobController {
           type: "cancelContractByHost",
           user: idUserRented,
           isRead: false,
-          url: `${process.env.BASE_PATH_CLINET3}pay-deposit-user/`,
+          url: `${process.env.BASE_PATH_CLINET3}/pay-deposit-user/`,
           tag: null,
           contentTag: null,
         });
 
-
         const listOrder = jobData.orders;
-        if(listOrder.length === 1) {
-          if(listOrder[0].isCompleted === true) {
+        if (listOrder.length === 1) {
+          if (listOrder[0].isCompleted === true) {
             await payDepositListModel.create({
               room: jobData.room._id,
               user: jobData.user._id,
@@ -3107,8 +3126,8 @@ export default class JobController {
               amount: jobData.deposit,
             });
           }
-        } else if(listOrder.length === 2) {
-          if(listOrder[1].isCompleted === true) {
+        } else if (listOrder.length === 2) {
+          if (listOrder[1].isCompleted === true) {
             await payDepositListModel.create({
               room: jobData.room._id,
               user: jobData.user._id,
@@ -3141,8 +3160,6 @@ export default class JobController {
           });
         }
 
-
-        
         let resData = await jobModel
           .findOneAndUpdate({ _id: jobInfor._id }, { isDeleted: true })
           .lean()

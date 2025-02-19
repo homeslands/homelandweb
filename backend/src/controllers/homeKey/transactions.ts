@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require("mongodb");
 import * as moment from "moment";
 import * as lodash from "lodash";
 import { helpers } from "../../utils";
@@ -14,7 +14,7 @@ import JobController from "./job.controller";
 import * as rn from "random-number";
 import * as bcrypt from "bcryptjs";
 import * as mongoose from "mongoose";
-var nodemailer = require('nodemailer');
+var nodemailer = require("nodemailer");
 var optionsNumbeer = {
   // example input , yes negative values do work
   min: 1000,
@@ -152,30 +152,39 @@ export default class TransactionsController {
   }
 
   static async postRequestWithdrawHost(
-    req: Request, 
-    res: Response, 
+    req: Request,
+    res: Response,
     next: NextFunction
   ): Promise<any> {
     try {
-      const { 
+      const {
         transactions: TransactionsModel,
         user: userModel,
         revenue: revenueModel,
       } = global.mongoModel;
       const { body: data } = req;
-      console.log({data})
+      console.log({ data });
 
       const user = await userModel
-        .findOne({ _id: req["userId"], isDeleted: false }, { password: 0, token: 0 })
+        .findOne(
+          { _id: req["userId"], isDeleted: false },
+          { password: 0, token: 0 }
+        )
         .populate("avatar identityCards")
         .lean()
         .exec();
       if (!user) {
-        return HttpResponse.returnBadRequestResponse(res, "Tài khoản không tồn tại");
+        return HttpResponse.returnBadRequestResponse(
+          res,
+          "Tài khoản không tồn tại"
+        );
       }
 
-      const revenueData = await revenueModel.findOne({ userId: req['userId'] }).lean().exec();
-      if(!revenueData) {
+      const revenueData = await revenueModel
+        .findOne({ userId: req["userId"] })
+        .lean()
+        .exec();
+      if (!revenueData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Dữ liệu doanh thu của quý khách chưa tồn tại"
@@ -186,11 +195,22 @@ export default class TransactionsController {
         user: req["userId"],
         type: "withdraw",
         status: "waiting",
-      }).lean().exec();
+      })
+        .lean()
+        .exec();
 
-      const totalAmountWaiting = transactionHistory.reduce((sum, item) => sum + item.amount, 0);
-      if ((totalAmountWaiting + parseInt(data.withdrawAmount)) > revenueData.totalAmount) {
-        return HttpResponse.returnBadRequestResponse(res, "Số tiền rút vượt quá số tiền hiện có, vui lòng kiểm tra lại");
+      const totalAmountWaiting = transactionHistory.reduce(
+        (sum, item) => sum + item.amount,
+        0
+      );
+      if (
+        totalAmountWaiting + parseInt(data.withdrawAmount) >
+        revenueData.totalAmount
+      ) {
+        return HttpResponse.returnBadRequestResponse(
+          res,
+          "Số tiền rút vượt quá số tiền hiện có, vui lòng kiểm tra lại"
+        );
       }
 
       const transactionData = {
@@ -216,7 +236,6 @@ export default class TransactionsController {
     }
   }
 
-
   static async getWithdrawRequestListAdmin(
     req: Request,
     res: Response,
@@ -224,8 +243,12 @@ export default class TransactionsController {
   ): Promise<any> {
     try {
       const { userId } = req.params;
-      console.log({userId})
-      const { transactions: TransactionsModel, banking: BankingModel, image: imageModel } = global.mongoModel;
+      console.log({ userId });
+      const {
+        transactions: TransactionsModel,
+        banking: BankingModel,
+        image: imageModel,
+      } = global.mongoModel;
 
       const transactionsData = await TransactionsModel.find({
         user: userId,
@@ -235,10 +258,9 @@ export default class TransactionsController {
         //   path: 'user',
         //   select: 'firstName lastName phoneNumber'  // Chỉ lấy các trường cụ thể từ collection 'user'
         // })
-        .populate('banking')
+        .populate("banking")
         .lean()
         .exec();
-
 
       if (!transactionsData) {
         return HttpResponse.returnBadRequestResponse(res, []);
@@ -287,14 +309,17 @@ export default class TransactionsController {
 
       let { body: formData } = req;
 
-      const userDataRes = await userModel.findOne({_id:  req["userId"]}).lean().exec();
+      const userDataRes = await userModel
+        .findOne({ _id: req["userId"] })
+        .lean()
+        .exec();
 
-      if(userDataRes) {
-        if(userDataRes.isLocked) {
+      if (userDataRes) {
+        if (userDataRes.isLocked) {
           return HttpResponse.returnBadRequestResponse(
             res,
             "Tài khoản của quý khách đã bị khóa tạm thời nên không thể tiến hành đặt cọc, vui lòng liên hệ admin!"
-          )
+          );
         }
       }
 
@@ -303,7 +328,9 @@ export default class TransactionsController {
         type: "deposit",
         isDeleted: false,
         status: "waiting",
-      }).lean().exec();
+      })
+        .lean()
+        .exec();
 
       if (transactionDataRes) {
         if (transactionDataRes.status === "waiting") {
@@ -312,7 +339,7 @@ export default class TransactionsController {
           return HttpResponse.returnBadRequestResponse(
             res,
             "Phòng đã được đặt cọc trước đó, giao dịch đang chờ phê duyệt. Vui lòng quay lại sau!"
-          )
+          );
         }
       }
 
@@ -333,22 +360,23 @@ export default class TransactionsController {
       }
 
       if (roomData.status !== "available") {
-        return HttpResponse.returnBadRequestResponse(
-          res,
-          "Phòng Đã Được Đặt"
-        );
+        return HttpResponse.returnBadRequestResponse(res, "Phòng Đã Được Đặt");
       }
 
       formData.price = roomData.price;
-      formData.bail =  roomData.depositPrice === 0 ? roomData.price : roomData.depositPrice;
+      formData.bail =
+        roomData.depositPrice === 0 ? roomData.price : roomData.depositPrice;
       formData.deposit = Number(roomData.price) / 2;
-      formData.afterCheckInCost = 
-        Number(roomData.price) * 0.5 
-        + Number(roomData.depositPrice === 0 ? roomData.price : roomData.depositPrice);
-      formData.total = 
-        Number(roomData.price) 
-        + Number(roomData.depositPrice === 0 ? roomData.price : roomData.depositPrice);
-
+      formData.afterCheckInCost =
+        Number(roomData.price) * 0.5 +
+        Number(
+          roomData.depositPrice === 0 ? roomData.price : roomData.depositPrice
+        );
+      formData.total =
+        Number(roomData.price) +
+        Number(
+          roomData.depositPrice === 0 ? roomData.price : roomData.depositPrice
+        );
 
       const dayID = moment(roomData.availableDate).format("DD/MM/YYYY");
 
@@ -441,11 +469,15 @@ export default class TransactionsController {
         user: req["userId"],
         job: resData._id,
         isCompleted: false,
-        description: `Tiền cọc phòng tháng ${myDateOld.split("/")[1]}/${myDateOld.split("/")[2]
-          }`,
+        description: `Tiền cọc phòng tháng ${myDateOld.split("/")[1]}/${
+          myDateOld.split("/")[2]
+        }`,
         amount: formData.deposit,
         type: "deposit",
-        expireTime: moment(resData.checkInTime).add(2, "days").endOf("day").toDate(),
+        expireTime: moment(resData.checkInTime)
+          .add(2, "days")
+          .endOf("day")
+          .toDate(),
       });
 
       resData = await jobModel.findOneAndUpdate(
@@ -462,7 +494,9 @@ export default class TransactionsController {
         user: req["userId"],
         keyPayment: formData.keyPayment,
         keyOrder: orderData.keyOrder,
-        description: `Tiền cọc phòng tháng ${myDateOld.split("/")[1]}/${myDateOld.split("/")[2]}`,
+        description: `Tiền cọc phòng tháng ${myDateOld.split("/")[1]}/${
+          myDateOld.split("/")[2]
+        }`,
         amount: orderData.amount,
         status: "waiting",
         paymentMethod: formData.type,
@@ -477,18 +511,23 @@ export default class TransactionsController {
       // session.endSession();
 
       const motelData = await motelRoomModel
-        .findOne({floors: floorData._id})
+        .findOne({ floors: floorData._id })
         .lean()
         .exec();
 
-      const adminData = await userModel.findOne({
-        role: { $in: ['master']}
-      }).lean().exec();
+      const adminData = await userModel
+        .findOne({
+          role: { $in: ["master"] },
+        })
+        .lean()
+        .exec();
 
-
-      if(motelData) {
-        const ownerData = await userModel.findOne({_id: motelData.owner}).lean().exec();
-        if(ownerData) {
+      if (motelData) {
+        const ownerData = await userModel
+          .findOne({ _id: motelData.owner })
+          .lean()
+          .exec();
+        if (ownerData) {
           //admin
           await NotificationController.createNotification({
             title: "Thông báo duyệt thanh toán cọc",
@@ -499,7 +538,7 @@ export default class TransactionsController {
 
             user: ownerData._id,
             isRead: false,
-            url: `${process.env.BASE_PATH_CLINET3}manage-deposit/accept-deposit/${motelData._id}`,
+            url: `${process.env.BASE_PATH_CLINET3}/manage-deposit/accept-deposit/${motelData._id}`,
             tag: "Transactions",
             contentTag: transactionsData._id,
           });
@@ -513,7 +552,7 @@ export default class TransactionsController {
 
             user: adminData._id,
             isRead: false,
-            url: `${process.env.BASE_PATH_CLINET3}manage-deposit/accept-deposit/${motelData._id}`,
+            url: `${process.env.BASE_PATH_CLINET3}/manage-deposit/accept-deposit/${motelData._id}`,
             tag: "Transactions",
             contentTag: transactionsData._id,
           });
@@ -527,7 +566,7 @@ export default class TransactionsController {
             user: req["userId"],
             isRead: false,
             type: "deposit",
-            url: `${process.env.BASE_PATH_CLINET3}transaction-banking-cash-log`,
+            url: `${process.env.BASE_PATH_CLINET3}/transaction-banking-cash-log`,
             tag: null,
             contentTag: null,
           });
@@ -548,7 +587,7 @@ export default class TransactionsController {
     } catch (e) {
       // await session.commitTransaction();
       // session.endSession();
-      console.log({e});
+      console.log({ e });
       next(e);
     }
   }
@@ -557,7 +596,7 @@ export default class TransactionsController {
   //   const { transactions: TransactionsModel, order: orderModel, user: userModel, room: roomModel, motelRoom: motelRoomModel, floor: floorModel, job: jobModel } = global.mongoModel;
   //   const id = req.params.id;
   //   let { body: formData } = req;
-  
+
   //   try {
   //     const transactionDataRes = await TransactionsModel.findOne({
   //       room: formData.roomId,
@@ -565,53 +604,53 @@ export default class TransactionsController {
   //       isDeleted: false,
   //       status: 'waiting',
   //     }).lean().exec();
-  
+
   //     if (transactionDataRes) {
   //       if (transactionDataRes.status === 'waiting') {
   //         return HttpResponse.returnBadRequestResponse(res, 'Phòng đã được đặt cọc trước đó, giao dịch đang chờ phê duyệt. Vui lòng quay lại sau!');
   //       }
   //     }
-  
+
   //     const roomData = await RoomController.getRoomById(formData.roomId);
-  
+
   //     if (roomData && roomData.error) {
   //       return HttpResponse.returnBadRequestResponse(res, roomData.errors[0].errorMessage);
   //     }
-  
+
   //     if (!roomData.isCompleted) {
   //       return HttpResponse.returnBadRequestResponse(res, 'Phòng chưa hoàn thành');
   //     }
-  
+
   //     if (roomData.status !== 'available') {
   //       return HttpResponse.returnBadRequestResponse(res, 'Phòng Đã Được Đặt');
   //     }
-  
+
   //     const dayID = moment(roomData.availableDate).format('DD/MM/YYYY');
-  
+
   //     if (moment(formData.checkInTime, 'MM-DD-YYYY').isBefore(moment(dayID, 'MM-DD-YYYY'))) {
   //       return HttpResponse.returnBadRequestResponse(res, 'Thời gian bắt đầu thuê nhỏ hơn ngày hiện tại');
   //     }
-  
+
   //     const myDateOld = formData.checkInTime;
   //     const dateOld = myDateOld.split('/')[0];
   //     const monthOld = myDateOld.split('/')[1];
   //     const yearOld = myDateOld.split('/')[2];
-  
+
   //     const stringDate = `${dateOld}-${monthOld}-${yearOld}`;
   //     let date = new Date(stringDate.replace(/(\d{2})-(\d{2})-(\d{4})/, '$2/$1/$3'));
   //     const myDateNew = date;
   //     formData.checkInTime = myDateNew;
   //     formData.room = roomData._id;
   //     formData.user = req['userId'];
-  
+
   //     const floorData = await floorModel.findOne({ rooms: formData.roomId }).lean().exec();
-  
+
   //     if (!floorData) {
   //       return HttpResponse.returnBadRequestResponse(res, 'Tầng không hợp lệ');
   //     }
-  
+
   //     const motelRoomData = await motelRoomModel.findOne({ floors: floorData._id }).lean().exec();
-  
+
   //     if (!motelRoomData) {
   //       return HttpResponse.returnBadRequestResponse(res, 'Phòng không hợp lệ');
   //     }
@@ -621,17 +660,17 @@ export default class TransactionsController {
   //         jobs: resData._id,
   //       },
   //     };
-  
+
   //     if (req['userProfile'].phoneNumber.number === helpers.stripeZeroOut(formData.phoneNumber)) {
   //       userUpdateData['currentJob'] = resData._id;
   //       userUpdateData['room'] = roomData._id;
   //     }
-  
+
   //     await userModel.findOneAndUpdate({ _id: req['userId'] }, userUpdateData, { new: true }).exec();
-  
+
   //     await floorModel.findOneAndUpdate({ _id: floorData._id }, { $inc: { availableRoom: -1, depositedRoom: 1 } }).exec();
   //     await motelRoomModel.findOneAndUpdate({ _id: floorData._id }, { $inc: { availableRoom: -1, depositedRoom: 1 } }).exec();
-  
+
   //     const orderData = await orderModel.create({
   //       user: req['userId'],
   //       job: resData._id,
@@ -641,11 +680,11 @@ export default class TransactionsController {
   //       type: 'deposit',
   //       expireTime: moment(resData.checkInTime).add(2, 'days').endOf('day').toDate(),
   //     });
-  
+
   //     resData = await jobModel.findOneAndUpdate({ _id: resData._id }, { isCompleted: orderData.isCompleted, $addToSet: { orders: orderData._id }, currentOrder: orderData._id }, { new: true });
-  
+
   //     await global.agendaInstance.agenda.schedule(moment().add('2', 'minutes').toDate(), 'CheckAcceptOrder', { orderId: orderData._id });
-  
+
   //     const transactionsData = await TransactionsModel.create({
   //       user: req['userId'],
   //       keyPayment: formData.keyPayment,
@@ -660,14 +699,13 @@ export default class TransactionsController {
   //       motel: motelRoomData._id,
   //       room: roomData._id,
   //     });
-  
+
   //     return HttpResponse.returnSuccessResponse(res, transactionsData);
   //   } catch (e) {
   //     console.error(e);
   //     throw new Error(e);
   //   }
   // }
-  
 
   static async postTransactionAfterCheckInCostPendingBanking(
     req: Request,
@@ -685,58 +723,76 @@ export default class TransactionsController {
         job: jobModel,
       } = global.mongoModel;
 
-
       let { body: formData } = req;
 
       console.log({ formData });
 
-      const orderData = await orderModel.findOne({ _id: formData.order }).lean().exec();
+      const orderData = await orderModel
+        .findOne({ _id: formData.order })
+        .lean()
+        .exec();
 
       if (!orderData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Không tìm thấy hóa đơn"
-        )
+        );
       }
 
-      if (moment(orderData.expireTime).endOf("days").isBefore(moment())) {
+      if (
+        moment(orderData.expireTime)
+          .endOf("days")
+          .isBefore(moment())
+      ) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Hóa đơn đã hết hạn thanh toán"
-        )
+        );
       }
 
-      const motelData = await motelRoomModel.findOne({ _id: formData.motel }).populate("owner").lean().exec();
+      const motelData = await motelRoomModel
+        .findOne({ _id: formData.motel })
+        .populate("owner")
+        .lean()
+        .exec();
       if (!motelData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Tòa nhà không tồn tại"
-        )
+        );
       }
 
-      const roomData = await roomModel.findOne({ _id: formData.room }).lean().exec();
+      const roomData = await roomModel
+        .findOne({ _id: formData.room })
+        .lean()
+        .exec();
       if (!roomData) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Phòng không tồn tại"
-        )
+        );
       }
 
       const tranRes = await TransactionsModel.findOne({
         order: ObjectId(formData.order),
         status: "waiting",
-      }).lean().exec();
+      })
+        .lean()
+        .exec();
 
       if (tranRes) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Yêu cầu thanh toán đã tồn tài, vui lòng chờ phê duyệt"
-        )
+        );
       }
 
-      const adminData = await userModel.findOne({
-        role: { $in: ['master']}
-      }).lean().exec();
+      const adminData = await userModel
+        .findOne({
+          role: { $in: ["master"] },
+        })
+        .lean()
+        .exec();
 
       // type TransactonType = {
       //   _id: string
@@ -767,7 +823,7 @@ export default class TransactionsController {
           user: adminData._id,
           isRead: false,
           type: "afterCheckInCost",
-          url: `${process.env.BASE_PATH_CLINET3}manage-deposit/accept-after-check-in-cost/${motelData._id}`,
+          url: `${process.env.BASE_PATH_CLINET3}/manage-deposit/accept-after-check-in-cost/${motelData._id}`,
           // tag: transactionsData._id,
           // contentTag: null,
           tag: "Transactions",
@@ -784,7 +840,7 @@ export default class TransactionsController {
           user: motelData.owner._id,
           isRead: false,
           type: "afterCheckInCost",
-          url: `${process.env.BASE_PATH_CLINET3}manage-deposit/accept-after-check-in-cost/${motelData._id}`,
+          url: `${process.env.BASE_PATH_CLINET3}/manage-deposit/accept-after-check-in-cost/${motelData._id}`,
           // tag: transactionsData._id,
           // contentTag: null,
           tag: "Transactions",
@@ -817,7 +873,7 @@ export default class TransactionsController {
           user: adminData._id,
           isRead: false,
           type: "monthly",
-          url: `${process.env.BASE_PATH_CLINET3}manage-monthly-order/manage-accept-order/${motelData._id}`,
+          url: `${process.env.BASE_PATH_CLINET3}/manage-monthly-order/manage-accept-order/${motelData._id}`,
           // tag: null,
           // contentTag: null,
           tag: "Transactions",
@@ -834,7 +890,7 @@ export default class TransactionsController {
           user: motelData.owner._id,
           isRead: false,
           type: "monthly",
-          url: `${process.env.BASE_PATH_CLINET3}manage-monthly-order/manage-accept-order/${motelData._id}`,
+          url: `${process.env.BASE_PATH_CLINET3}/manage-monthly-order/manage-accept-order/${motelData._id}`,
           // tag: null,
           // contentTag: null,
           tag: "Transactions",
@@ -873,29 +929,36 @@ export default class TransactionsController {
         floor: floorModel,
       } = global.mongoModel;
 
-      const userData = await userModel.findOne({ _id: userId }).populate("jobs").lean().exec();
+      const userData = await userModel
+        .findOne({ _id: userId })
+        .populate("jobs")
+        .lean()
+        .exec();
       if (!userData) {
-        return HttpResponse.returnBadRequestResponse(res,
+        return HttpResponse.returnBadRequestResponse(
+          res,
           "Người dùng không tồn tại"
-        )
+        );
       }
       if (userData.jobs.lengh === 0) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Người dùng chưa có hợp đồng thuê phòng nào"
-        )
+        );
       }
-      const jobListCurrent = userData.jobs.filter(job => job.isDeleted === false); //chưa bị xóa
+      const jobListCurrent = userData.jobs.filter(
+        (job) => job.isDeleted === false
+      ); //chưa bị xóa
       console.log(jobListCurrent.length);
 
       if (jobListCurrent.length === 0) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Người dùng không có hợp đồng nào còn hiệu lực"
-        )
+        );
       }
 
-      let currentOrderIdOfList = jobListCurrent.map(job => job.currentOrder);
+      let currentOrderIdOfList = jobListCurrent.map((job) => job.currentOrder);
       console.log({ currentOrderIdOfList });
       //sẽ có trường hợp user có 2 bill liên tiếp chưa thanh toán, kiểm tra order kế order current
 
@@ -903,9 +966,12 @@ export default class TransactionsController {
 
       let orderNoPaymentList = [];
       for (let i: number = 0; i < currentOrderIdOfListLength; i++) {
-        let orderData = await orderModel.findOne({ _id: currentOrderIdOfList[i]}).lean().exec();
+        let orderData = await orderModel
+          .findOne({ _id: currentOrderIdOfList[i] })
+          .lean()
+          .exec();
         console.log("orderData: ", orderData);
-        if(orderData) {
+        if (orderData) {
           if (orderData.isCompleted === false) {
             orderNoPaymentList.push(orderData);
           }
@@ -913,9 +979,10 @@ export default class TransactionsController {
       }
 
       if (orderNoPaymentList.length === 0) {
-        return HttpResponse.returnBadRequestResponse(res,
+        return HttpResponse.returnBadRequestResponse(
+          res,
           "Người dùng hiện tại không có hóa đơn nào chưa thanh toán"
-        )
+        );
       }
 
       // for(let i: number = 0; i < orderNoPaymentList.length; i++) {
@@ -932,12 +999,22 @@ export default class TransactionsController {
       //   }
       // }
       async function enrichOrderData(order) {
-        let jobData = await jobModel.findOne({ _id: order.job }).populate("room").lean().exec();
+        let jobData = await jobModel
+          .findOne({ _id: order.job })
+          .populate("room")
+          .lean()
+          .exec();
         if (jobData) {
           order.job = jobData;
-          let floorData = await floorModel.findOne({ rooms: jobData.room._id }).lean().exec();
+          let floorData = await floorModel
+            .findOne({ rooms: jobData.room._id })
+            .lean()
+            .exec();
           if (floorData) {
-            let motelData = await motelRoomModel.findOne({ floors: floorData._id }).lean().exec();
+            let motelData = await motelRoomModel
+              .findOne({ floors: floorData._id })
+              .lean()
+              .exec();
             if (motelData) {
               order.motel = motelData;
             }
@@ -946,7 +1023,9 @@ export default class TransactionsController {
         return order;
       }
 
-      orderNoPaymentList = await Promise.all(orderNoPaymentList.map(enrichOrderData));
+      orderNoPaymentList = await Promise.all(
+        orderNoPaymentList.map(enrichOrderData)
+      );
       orderNoPaymentList = orderNoPaymentList.reverse();
 
       return HttpResponse.returnSuccessResponse(res, orderNoPaymentList);
@@ -972,7 +1051,11 @@ export default class TransactionsController {
         floor: floorModel,
       } = global.mongoModel;
 
-      const motelData = await motelRoomModel.findOne({ _id: idMotel }).populate("floors").lean().exec();
+      const motelData = await motelRoomModel
+        .findOne({ _id: idMotel })
+        .populate("floors")
+        .lean()
+        .exec();
       if (!motelData) {
         // return HttpResponse.returnBadRequestResponse(
         //   res,
@@ -1006,31 +1089,47 @@ export default class TransactionsController {
       let listOrderPendingPay = [];
       for (let i: number = 0; i < roomIdListLength; i++) {
         let dataPush = {};
-        let jobData = await jobModel.findOne({
-          isDeleted: false,
-          room: roomIdList[i]
-        }).populate("currentOrder room").lean().exec();
+        let jobData = await jobModel
+          .findOne({
+            isDeleted: false,
+            room: roomIdList[i],
+          })
+          .populate("currentOrder room")
+          .lean()
+          .exec();
 
         console.log(`${roomIdList[i]} : ${jobData}`);
 
         if (jobData) {
           // const currentOrderRes = await orderModel.findOne({_id: jobData.currentOrder}).lean().exec();
-          if(jobData.currentOrder !== null) {
-            if (jobData.currentOrder.isCompleted === false && jobData.currentOrder.type === "monthly") {
-              console.log("HÓA ĐƠN")
-              let userData = await userModel.findOne({ _id: jobData.user }).lean().exec();
+          if (jobData.currentOrder !== null) {
+            if (
+              jobData.currentOrder.isCompleted === false &&
+              jobData.currentOrder.type === "monthly"
+            ) {
+              console.log("HÓA ĐƠN");
+              let userData = await userModel
+                .findOne({ _id: jobData.user })
+                .lean()
+                .exec();
               let data;
               if (userData && jobData.room) {
                 data = {
                   userName: userData.lastName + " " + userData.firstName,
-                  userPhone: userData.phoneNumber.countryCode + " " + userData.phoneNumber.number,
+                  userPhone:
+                    userData.phoneNumber.countryCode +
+                    " " +
+                    userData.phoneNumber.number,
                   roomName: jobData.room.name,
                   ...jobData.currentOrder,
                 };
               } else if (userData) {
                 data = {
                   userName: userData.lastName + " " + userData.firstName,
-                  userPhone: userData.phoneNumber.countryCode + " " + userData.phoneNumber.number,
+                  userPhone:
+                    userData.phoneNumber.countryCode +
+                    " " +
+                    userData.phoneNumber.number,
                   roomName: null,
                   ...jobData.currentOrder,
                 };
@@ -1080,7 +1179,11 @@ export default class TransactionsController {
         floor: floorModel,
       } = global.mongoModel;
 
-      const motelData = await motelRoomModel.findOne({ _id: idMotel }).populate("floors").lean().exec();
+      const motelData = await motelRoomModel
+        .findOne({ _id: idMotel })
+        .populate("floors")
+        .lean()
+        .exec();
       if (!motelData) {
         // return HttpResponse.returnBadRequestResponse(
         //   res,
@@ -1117,26 +1220,43 @@ export default class TransactionsController {
       let listOrderPendingPay = [];
       for (let i: number = 0; i < roomIdListLength; i++) {
         let dataPush = {};
-        let jobData = await jobModel.findOne({
-          isDeleted: false,
-          room: roomIdList[i]
-        }).populate("currentOrder room").lean().exec();
+        let jobData = await jobModel
+          .findOne({
+            isDeleted: false,
+            room: roomIdList[i],
+          })
+          .populate("currentOrder room")
+          .lean()
+          .exec();
 
         if (jobData) {
-          if (jobData.currentOrder.isCompleted === false && (jobData.currentOrder.type === "deposit" || jobData.currentOrder.type === "afterCheckInCost")) {
-            let userData = await userModel.findOne({ _id: jobData.user }).lean().exec();
+          if (
+            jobData.currentOrder.isCompleted === false &&
+            (jobData.currentOrder.type === "deposit" ||
+              jobData.currentOrder.type === "afterCheckInCost")
+          ) {
+            let userData = await userModel
+              .findOne({ _id: jobData.user })
+              .lean()
+              .exec();
             let data;
             if (userData && jobData.room) {
               data = {
                 userName: userData.lastName + " " + userData.firstName,
-                userPhone: userData.phoneNumber.countryCode + " " + userData.phoneNumber.number,
+                userPhone:
+                  userData.phoneNumber.countryCode +
+                  " " +
+                  userData.phoneNumber.number,
                 roomName: jobData.room.name,
                 ...jobData.currentOrder,
               };
             } else if (userData) {
               data = {
                 userName: userData.lastName + " " + userData.firstName,
-                userPhone: userData.phoneNumber.countryCode + " " + userData.phoneNumber.number,
+                userPhone:
+                  userData.phoneNumber.countryCode +
+                  " " +
+                  userData.phoneNumber.number,
                 roomName: null,
                 ...jobData.currentOrder,
               };
@@ -1175,7 +1295,7 @@ export default class TransactionsController {
     try {
       const idPayDeposit = req.params.id;
 
-      console.log({ idPayDeposit })
+      console.log({ idPayDeposit });
 
       const {
         order: orderModel,
@@ -1184,7 +1304,10 @@ export default class TransactionsController {
 
       let listOrderNoPay = [];
 
-      const payDepositListData = await payDepositListModel.findOne({ _id: idPayDeposit }).lean().exec();
+      const payDepositListData = await payDepositListModel
+        .findOne({ _id: idPayDeposit })
+        .lean()
+        .exec();
 
       if (!payDepositListData) {
         return HttpResponse.returnSuccessResponse(res, []);
@@ -1197,25 +1320,25 @@ export default class TransactionsController {
       }
 
       for (let i = 0; i < payDepositListData.ordersNoPay.length; i++) {
-        let orderData = await orderModel.findOne({ _id: payDepositListData.ordersNoPay[i] }).lean().exec();
+        let orderData = await orderModel
+          .findOne({ _id: payDepositListData.ordersNoPay[i] })
+          .lean()
+          .exec();
         if (orderData) {
           listOrderNoPay.push(orderData);
         }
       }
 
       return HttpResponse.returnSuccessResponse(res, listOrderNoPay);
-
     } catch (error) {
       next(error);
     }
   }
 
-
-
   static async getBankingCashPendingDepositListByMotel(
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ): Promise<any> {
     try {
       // const id = req.params.id;
@@ -1235,9 +1358,12 @@ export default class TransactionsController {
         paymentMethod: { $ne: "wallet" },
         isDeleted: false,
         status: "waiting",
-      }).populate("room").lean().exec();
+      })
+        .populate("room")
+        .lean()
+        .exec();
 
-      console.log({ transactionsData })
+      console.log({ transactionsData });
       if (transactionsData) {
         for (let i = 0; i < transactionsData.length; i++) {
           if (transactionsData[i].file) {
@@ -1249,7 +1375,11 @@ export default class TransactionsController {
             }
           }
 
-          const userData = await userModel.findOne({ _id: transactionsData[i].user }).populate("backId avatar frontId").lean().exec();
+          const userData = await userModel
+            .findOne({ _id: transactionsData[i].user })
+            .populate("backId avatar frontId")
+            .lean()
+            .exec();
 
           if (userData) {
             if (userData.backId) {
@@ -1294,7 +1424,7 @@ export default class TransactionsController {
   static async historyTransactions(
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ): Promise<any> {
     try {
       // const id = req.params.id;
@@ -1314,9 +1444,12 @@ export default class TransactionsController {
         paymentMethod: { $ne: "wallet" },
         isDeleted: false,
         status: { $ne: "waiting" },
-      }).populate("room").lean().exec();
+      })
+        .populate("room")
+        .lean()
+        .exec();
 
-      console.log({ transactionsData })
+      console.log({ transactionsData });
       if (transactionsData) {
         for (let i = 0; i < transactionsData.length; i++) {
           if (transactionsData[i].file) {
@@ -1328,7 +1461,11 @@ export default class TransactionsController {
             }
           }
 
-          const userData = await userModel.findOne({ _id: transactionsData[i].user }).populate("backId avatar frontId").lean().exec();
+          const userData = await userModel
+            .findOne({ _id: transactionsData[i].user })
+            .populate("backId avatar frontId")
+            .lean()
+            .exec();
 
           if (userData) {
             if (userData.backId) {
@@ -1373,7 +1510,7 @@ export default class TransactionsController {
   static async getBankingCashPendingAfterCheckInCostListByMotel(
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ): Promise<any> {
     try {
       // const id = req.params.id;
@@ -1396,7 +1533,10 @@ export default class TransactionsController {
         paymentMethod: { $ne: "wallet" },
         isDeleted: false,
         status: "waiting",
-      }).populate("room").lean().exec();
+      })
+        .populate("room")
+        .lean()
+        .exec();
 
       if (transactionsData) {
         for (let i = 0; i < transactionsData.length; i++) {
@@ -1409,7 +1549,11 @@ export default class TransactionsController {
             }
           }
 
-          const userData = await userModel.findOne({ _id: transactionsData[i].user }).populate("backId avatar frontId").lean().exec();
+          const userData = await userModel
+            .findOne({ _id: transactionsData[i].user })
+            .populate("backId avatar frontId")
+            .lean()
+            .exec();
 
           if (userData) {
             if (userData.backId) {
@@ -1453,7 +1597,7 @@ export default class TransactionsController {
   static async getBankingCashPendingMonthlyByMotel(
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ): Promise<any> {
     try {
       const idMotel = req.params.id;
@@ -1472,7 +1616,10 @@ export default class TransactionsController {
         paymentMethod: { $ne: "wallet" },
         isDeleted: false,
         status: "waiting",
-      }).populate("room").lean().exec();
+      })
+        .populate("room")
+        .lean()
+        .exec();
 
       if (transactionsData) {
         for (let i = 0; i < transactionsData.length; i++) {
@@ -1485,7 +1632,11 @@ export default class TransactionsController {
             }
           }
 
-          const userData = await userModel.findOne({ _id: transactionsData[i].user }).populate("backId avatar frontId").lean().exec();
+          const userData = await userModel
+            .findOne({ _id: transactionsData[i].user })
+            .populate("backId avatar frontId")
+            .lean()
+            .exec();
 
           if (userData) {
             if (userData.backId) {
@@ -1531,7 +1682,7 @@ export default class TransactionsController {
   static async getBankingCashTransactionsList(
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ): Promise<any> {
     try {
       // const id = req.params.id;
@@ -1546,8 +1697,11 @@ export default class TransactionsController {
         room: roomModel,
       } = global.mongoModel;
 
-      const userData = await userModel.findOne({ _id: id }).lean().exec();
-      console.log({ userData })
+      const userData = await userModel
+        .findOne({ _id: id })
+        .lean()
+        .exec();
+      console.log({ userData });
       if (!userData) {
         return HttpResponse.returnBadRequestResponse(
           res,
@@ -1560,7 +1714,10 @@ export default class TransactionsController {
         type: { $ne: "recharge" },
         paymentMethod: { $ne: "wallet" },
         // isDeleted: false,
-      }).populate("motel room order").lean().exec();
+      })
+        .populate("motel room order")
+        .lean()
+        .exec();
 
       if (transactionsData) {
         for (let i = 0; i < transactionsData.length; i++) {
@@ -1602,7 +1759,6 @@ export default class TransactionsController {
       next(error);
     }
   }
-
 
   static async putPayDeposit(
     req: Request,
@@ -1708,11 +1864,15 @@ export default class TransactionsController {
         );
       }
 
-      if (resData.status === "cancel" || resData.status === "success" || resData.status === "faild") {
+      if (
+        resData.status === "cancel" ||
+        resData.status === "success" ||
+        resData.status === "faild"
+      ) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Giao dịch đã được xử lý"
-        )
+        );
       }
 
       const resDataS = await TransactionsModel.findOneAndUpdate(
@@ -1816,16 +1976,27 @@ export default class TransactionsController {
             total: orderData.roomPrice.toFixed(2),
           });
 
-          const userData = await userModel.findOne({ _id: JobData.user }).lean().exec();
+          const userData = await userModel
+            .findOne({ _id: JobData.user })
+            .lean()
+            .exec();
           console.log({ userData });
-          const floorData = await floorModel.findOne({ rooms: JobData.room._id }).lean().exec();
+          const floorData = await floorModel
+            .findOne({ rooms: JobData.room._id })
+            .lean()
+            .exec();
           console.log({ floorData });
-          const motelData = await motelRoomModel.findOne({ floors: floorData._id })
-            .populate("owner address").lean().exec();
+          const motelData = await motelRoomModel
+            .findOne({ floors: floorData._id })
+            .populate("owner address")
+            .lean()
+            .exec();
 
-          console.log({ motelData })
+          console.log({ motelData });
           // const bankData = await BankingModel.find({user: motelData.owner._id}).lean().exec();
-          const bankData = await BankingModel.find({ _id: resDataS.banking }).lean().exec();
+          const bankData = await BankingModel.find({ _id: resDataS.banking })
+            .lean()
+            .exec();
           console.log({ bankData });
 
           let billMontly = await billModel.create({
@@ -1837,17 +2008,24 @@ export default class TransactionsController {
             nameRoom: roomData.name,
 
             nameUser: userData.lastName + " " + userData.firstName,
-            phoneUser: userData.phoneNumber.countryCode + userData.phoneNumber.number,
+            phoneUser:
+              userData.phoneNumber.countryCode + userData.phoneNumber.number,
             addressUser: userData.address,
             emailUser: userData.email,
 
             nameOwner: motelData.owner.lastName + motelData.owner.firstName,
             emailOwner: motelData.owner.email,
-            phoneOwner: motelData.owner.phoneNumber.countryCode + motelData.owner.phoneNumber.number,
+            phoneOwner:
+              motelData.owner.phoneNumber.countryCode +
+              motelData.owner.phoneNumber.number,
             addressOwner: motelData.owner.address,
-            nameBankOwner: bankData ? bankData[0].nameTkLable : "Chưa thêm tài khoản",
+            nameBankOwner: bankData
+              ? bankData[0].nameTkLable
+              : "Chưa thêm tài khoản",
             numberBankOwner: bankData ? bankData[0].stk : "Chưa thêm tài khoản",
-            nameOwnerBankOwner: bankData ? bankData[0].nameTk : "Chưa thêm tài khoản",
+            nameOwnerBankOwner: bankData
+              ? bankData[0].nameTk
+              : "Chưa thêm tài khoản",
 
             totalAll: orderData.amount.toFixed(2),
             totalAndTaxAll: orderData.amount.toFixed(2),
@@ -1876,7 +2054,7 @@ export default class TransactionsController {
 
           await RevenueController.updateRevenue(
             billMontly._id,
-            resDataS.banking,
+            resDataS.banking
           );
         }
 
@@ -1930,9 +2108,15 @@ export default class TransactionsController {
               .exec();
 
             let updateData = {
-              availableRoom: lodash.sumBy(motelRoomData.floors, "availableRoom"),
+              availableRoom: lodash.sumBy(
+                motelRoomData.floors,
+                "availableRoom"
+              ),
               rentedRoom: lodash.sumBy(motelRoomData.floors, "rentedRoom"),
-              depositedRoom: lodash.sumBy(motelRoomData.floors, "depositedRoom"),
+              depositedRoom: lodash.sumBy(
+                motelRoomData.floors,
+                "depositedRoom"
+              ),
             };
 
             await motelRoomModel
@@ -1951,8 +2135,13 @@ export default class TransactionsController {
               .exec();
 
             // const bankData = await BankingModel.find({user: motelRoomData.owner._id}).lean().exec();
-            const bankData = await BankingModel.find({ _id: resDataS.banking }).lean().exec();
-            const userData = await userModel.findOne({ _id: jobData.user }).lean().exec();
+            const bankData = await BankingModel.find({ _id: resDataS.banking })
+              .lean()
+              .exec();
+            const userData = await userModel
+              .findOne({ _id: jobData.user })
+              .lean()
+              .exec();
 
             //create bill
             let billDeposit = await billModel.create({
@@ -1964,17 +2153,27 @@ export default class TransactionsController {
               nameRoom: jobData.room.name,
 
               nameUser: userData.lastName + " " + userData.firstName,
-              phoneUser: userData.phoneNumber.countryCode + userData.phoneNumber.number,
+              phoneUser:
+                userData.phoneNumber.countryCode + userData.phoneNumber.number,
               addressUser: userData.address,
               emailUser: userData.email,
 
-              nameOwner: motelRoomData.owner.lastName + motelRoomData.owner.firstName,
+              nameOwner:
+                motelRoomData.owner.lastName + motelRoomData.owner.firstName,
               emailOwner: motelRoomData.owner.email,
-              phoneOwner: motelRoomData.owner.phoneNumber.countryCode + motelRoomData.owner.phoneNumber.number,
+              phoneOwner:
+                motelRoomData.owner.phoneNumber.countryCode +
+                motelRoomData.owner.phoneNumber.number,
               addressOwner: motelRoomData.owner.address,
-              nameBankOwner: bankData ? bankData[0].nameTkLable : "Chưa thêm tài khoản",
-              numberBankOwner: bankData ? bankData[0].stk : "Chưa thêm tài khoản",
-              nameOwnerBankOwner: bankData ? bankData[0].nameTk : "Chưa thêm tài khoản",
+              nameBankOwner: bankData
+                ? bankData[0].nameTkLable
+                : "Chưa thêm tài khoản",
+              numberBankOwner: bankData
+                ? bankData[0].stk
+                : "Chưa thêm tài khoản",
+              nameOwnerBankOwner: bankData
+                ? bankData[0].nameTk
+                : "Chưa thêm tài khoản",
 
               totalAll: orderData.amount.toFixed(2),
               totalAndTaxAll: orderData.amount.toFixed(2),
@@ -1992,46 +2191,54 @@ export default class TransactionsController {
 
             await RevenueController.updateRevenue(
               billDeposit._id,
-              resDataS.banking,
+              resDataS.banking
             );
 
-            const activeExpireTime = moment(jobData.checkInTime).add(7, "days").endOf("days").format("DD/MM/YYYY");
+            const activeExpireTime = moment(jobData.checkInTime)
+              .add(7, "days")
+              .endOf("days")
+              .format("DD/MM/YYYY");
 
             await NotificationController.createNotification({
               title: "Thông báo kích hoạt hợp đồng",
               content: `Đặt cọc phòng của quý khác đã được phê duyệt. Vui lòng kích hoạt hợp đồng cho phòng 
-              ${ jobData.room.name} thuộc tòa nhà ${motelRoomData.name}, hạn cuối tới ngày ${activeExpireTime}.`,
+              ${jobData.room.name} thuộc tòa nhà ${motelRoomData.name}, hạn cuối tới ngày ${activeExpireTime}.`,
 
               user: resData.user._id,
               isRead: false,
               type: "activeJob",
-              url: `${process.env.BASE_PATH_CLINET3}job-detail/${jobData._id}/${jobData.room._id}`,
+              url: `${process.env.BASE_PATH_CLINET3}/job-detail/${jobData._id}/${jobData.room._id}`,
               tag: "Job",
               contentTag: jobData._id,
             });
 
-            console.log( `SSSSS: ${process.env.BASE_PATH_CLINET3}job-detail/${jobData._id}/${jobData.room._id}`)
+            console.log(
+              `SSSSS: ${process.env.BASE_PATH_CLINET3}/job-detail/${jobData._id}/${jobData.room._id}`
+            );
 
-            const userDataRes = await userModel.findOne({_id: resData.user}).lean().exec();
-            if(userDataRes) {
-              if(userDataRes.email) {
+            const userDataRes = await userModel
+              .findOne({ _id: resData.user })
+              .lean()
+              .exec();
+            if (userDataRes) {
+              if (userDataRes.email) {
                 const transporter = nodemailer.createTransport({
-                  service: 'gmail',
+                  service: "gmail",
                   auth: {
                     user: `${process.env.Gmail_USER}`,
-                    pass: `${process.env.Gmail_PASS}`
-                  }
-                });    
-    
+                    pass: `${process.env.Gmail_PASS}`,
+                  },
+                });
+
                 const mailOptions = {
                   from: `${process.env.Gmail_USER}`,
                   // to: 'quyetthangmarvel@gmail.com',
-                  to: userDataRes.email,  // thay bằng mail admin
+                  to: userDataRes.email, // thay bằng mail admin
                   subject: `THÔNG BÁO KÍCH HOẠT HỢP ĐỒNG`,
                   text: `Vui lòng kích hoạt hợp đồng, hạn cuối: ${activeExpireTime}.`,
                 };
-    
-                transporter.sendMail(mailOptions, function (error, info) {
+
+                transporter.sendMail(mailOptions, function(error, info) {
                   if (error) {
                     console.error(error);
                   } else {
@@ -2064,13 +2271,24 @@ export default class TransactionsController {
             )
             .exec();
 
-          const userData = await userModel.findOne({ _id: JobData.user }).lean().exec();
-          const floorData = await floorModel.findOne({ rooms: JobData.room._id }).lean().exec();
-          const motelData = await motelRoomModel.findOne({ floors: floorData._id })
-            .populate("owner address").lean().exec();
+          const userData = await userModel
+            .findOne({ _id: JobData.user })
+            .lean()
+            .exec();
+          const floorData = await floorModel
+            .findOne({ rooms: JobData.room._id })
+            .lean()
+            .exec();
+          const motelData = await motelRoomModel
+            .findOne({ floors: floorData._id })
+            .populate("owner address")
+            .lean()
+            .exec();
 
           // const bankData = await BankingModel.find({user: motelData.owner._id}).lean().exec();
-          const bankData = await BankingModel.find({ _id: resDataS.banking }).lean().exec();
+          const bankData = await BankingModel.find({ _id: resDataS.banking })
+            .lean()
+            .exec();
 
           //create bill
           let billAfterCheckInCost = await billModel.create({
@@ -2082,17 +2300,24 @@ export default class TransactionsController {
             nameRoom: JobData.room.name,
 
             nameUser: userData.lastName + " " + userData.firstName,
-            phoneUser: userData.phoneNumber.countryCode + userData.phoneNumber.number,
+            phoneUser:
+              userData.phoneNumber.countryCode + userData.phoneNumber.number,
             addressUser: userData.address,
             emailUser: userData.email,
 
             nameOwner: motelData.owner.lastName + motelData.owner.firstName,
             emailOwner: motelData.owner.email,
-            phoneOwner: motelData.owner.phoneNumber.countryCode + motelData.owner.phoneNumber.number,
+            phoneOwner:
+              motelData.owner.phoneNumber.countryCode +
+              motelData.owner.phoneNumber.number,
             addressOwner: motelData.owner.address,
-            nameBankOwner: bankData ? bankData[0].nameTkLable : "Chưa thêm tài khoản",
+            nameBankOwner: bankData
+              ? bankData[0].nameTkLable
+              : "Chưa thêm tài khoản",
             numberBankOwner: bankData ? bankData[0].stk : "Chưa thêm tài khoản",
-            nameOwnerBankOwner: bankData ? bankData[0].nameTk : "Chưa thêm tài khoản",
+            nameOwnerBankOwner: bankData
+              ? bankData[0].nameTk
+              : "Chưa thêm tài khoản",
 
             totalAll: orderData.amount.toFixed(2),
             totalAndTaxAll: orderData.amount.toFixed(2),
@@ -2110,7 +2335,7 @@ export default class TransactionsController {
 
           await RevenueController.updateRevenue(
             billAfterCheckInCost._id,
-            resDataS.banking,
+            resDataS.banking
           );
 
           const jobData = await JobController.getJobNoImg(orderData.job);
@@ -2118,7 +2343,7 @@ export default class TransactionsController {
           const checkInTime = moment(jobData.checkInTime);
 
           // if(checkInTimePlusOneMonth.startOf("months").isBefore(moment())) {
-          if(checkInTime.endOf("months").isSame(moment().endOf("months"))) {
+          if (checkInTime.endOf("months").isSame(moment().endOf("months"))) {
             await global.agendaInstance.agenda.schedule(
               moment()
                 .startOf("month")
@@ -2148,7 +2373,7 @@ export default class TransactionsController {
             { new: true }
           )
           .lean()
-          .exec()
+          .exec();
 
         return HttpResponse.returnSuccessResponse(res, resDataS);
       } else if (resDataS.status === "cancel") {
@@ -2174,16 +2399,16 @@ export default class TransactionsController {
         // nếu cọc thì xóa job, xóa order
         if (resDataS.type === "deposit") {
           //khóa user
-          await userModel.findOneAndUpdate(
-            {_id: resDataS.user},
-            {isLocked: true}
-          ).lean().exec();
-          
+          await userModel
+            .findOneAndUpdate({ _id: resDataS.user }, { isLocked: true })
+            .lean()
+            .exec();
+
           //xóa job tạm thời
-          await jobModel.findOneAndUpdate(
-            { _id: orderData.job },
-            { isDeleted: true },
-          ).lean().exec();
+          await jobModel
+            .findOneAndUpdate({ _id: orderData.job }, { isDeleted: true })
+            .lean()
+            .exec();
 
           //xóa job ra khỏi user
           let userUpdateData = {
@@ -2193,10 +2418,15 @@ export default class TransactionsController {
           };
 
           await userModel
-            .findOneAndUpdate({ _id: resDataS.user }, userUpdateData, { new: true })
+            .findOneAndUpdate({ _id: resDataS.user }, userUpdateData, {
+              new: true,
+            })
             .exec();
 
-          await orderModel.remove({ _id: orderData._id }).lean().exec();
+          await orderModel
+            .remove({ _id: orderData._id })
+            .lean()
+            .exec();
         }
 
         return HttpResponse.returnSuccessResponse(res, resDataS);
@@ -2329,7 +2559,9 @@ export default class TransactionsController {
       let transactionData = await TransactionsModel.findOne({
         _id: id,
         isDeleted: false,
-      }).lean().exec();
+      })
+        .lean()
+        .exec();
 
       if (!transactionData) {
         return HttpResponse.returnBadRequestResponse(
@@ -2338,16 +2570,19 @@ export default class TransactionsController {
         );
       }
 
-      if(transactionData.status !== "waiting") {
+      if (transactionData.status !== "waiting") {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Giao dịch đã được phê duyệt"
         );
       }
 
-      let userRevenue = await revenueModel.findOne({
-        userId: transactionData.user,
-      }).lean().exec();
+      let userRevenue = await revenueModel
+        .findOne({
+          userId: transactionData.user,
+        })
+        .lean()
+        .exec();
 
       if (!userRevenue) {
         return HttpResponse.returnBadRequestResponse(
@@ -2358,11 +2593,11 @@ export default class TransactionsController {
 
       const totalAmountBeforeUpdate = userRevenue.totalAmount;
 
-      if(totalAmountBeforeUpdate < transactionData.amount) {
+      if (totalAmountBeforeUpdate < transactionData.amount) {
         return HttpResponse.returnBadRequestResponse(
           res,
           "Số dư không đủ, vui lòng kiểm tra lại lịch sử giao dịch"
-        )
+        );
       }
 
       transactionData = await TransactionsModel.findOneAndUpdate(
@@ -2371,11 +2606,14 @@ export default class TransactionsController {
         { new: true }
       );
 
-      userRevenue = await revenueModel.findOneAndUpdate(
-        { userId: transactionData.user },
-        { totalAmount: (totalAmountBeforeUpdate - transactionData.amount) },
-        { new: true }
-      ).lean().exec()
+      userRevenue = await revenueModel
+        .findOneAndUpdate(
+          { userId: transactionData.user },
+          { totalAmount: totalAmountBeforeUpdate - transactionData.amount },
+          { new: true }
+        )
+        .lean()
+        .exec();
 
       // log
       let revenueLogData = await revenueLogModel.create({
@@ -2416,7 +2654,9 @@ export default class TransactionsController {
       let resData = await TransactionsModel.findOne({
         _id: id,
         isDeleted: false,
-      }).lean().exec();
+      })
+        .lean()
+        .exec();
 
       if (!resData) {
         return HttpResponse.returnBadRequestResponse(
@@ -2430,7 +2670,7 @@ export default class TransactionsController {
         {
           $set: {
             status: "cancel",
-          }
+          },
         }
       );
 
@@ -2440,15 +2680,30 @@ export default class TransactionsController {
     }
   }
 
-  static async getWithdrawalsRequestListByHost(req: Request, res: Response, next: NextFunction): Promise<any> {
+  static async getWithdrawalsRequestListByHost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
     try {
-      const { transactions: TransactionsModel, user: userModel, image: imageModel, banking: BankingModel } = global.mongoModel;
+      const {
+        transactions: TransactionsModel,
+        user: userModel,
+        image: imageModel,
+        banking: BankingModel,
+      } = global.mongoModel;
       const userId = req.params.userId;
       const motelName = req.params.motelName;
 
-      const userData = await userModel.findOne({ _id: userId }).lean().exec();
+      const userData = await userModel
+        .findOne({ _id: userId })
+        .lean()
+        .exec();
       if (!userData) {
-        return HttpResponse.returnBadRequestResponse(res, "Người dùng không tồn tại");
+        return HttpResponse.returnBadRequestResponse(
+          res,
+          "Người dùng không tồn tại"
+        );
       }
       const firstName = userData.firstName;
       const lastName = userData.lastName;
@@ -2456,19 +2711,23 @@ export default class TransactionsController {
       const withdrawalsList = await TransactionsModel.find({
         user: userId,
         type: "withdraw",
-        isDeleted: false
-      }).lean().exec();
+        isDeleted: false,
+      })
+        .lean()
+        .exec();
 
       // Process withdrawal request images
       for (let i = 0; i < withdrawalsList.length; i++) {
         if (withdrawalsList[i].file) {
           try {
-            const dataimg = await imageModel.findOne({ _id: withdrawalsList[i].file });
+            const dataimg = await imageModel.findOne({
+              _id: withdrawalsList[i].file,
+            });
             if (dataimg) {
               withdrawalsList[i].file = await helpers.getImageUrl(dataimg);
             }
           } catch (error) {
-            console.error('Error retrieving image URL:', error);
+            console.error("Error retrieving image URL:", error);
           }
         }
       }
@@ -2477,19 +2736,21 @@ export default class TransactionsController {
 
       const updatedWithdrawalsList = await Promise.all(
         withdrawalsList.map(async (item) => {
-          let bankName = '';
-          let bankNumber = '';
-          let bankOwner = '';
+          let bankName = "";
+          let bankNumber = "";
+          let bankOwner = "";
 
           if (!bankMap[item.banking]) {
-            const bankData = await BankingModel.findOne({ _id: item.banking }).lean().exec();
+            const bankData = await BankingModel.findOne({ _id: item.banking })
+              .lean()
+              .exec();
             if (bankData) {
               bankName = bankData.nameTkLable;
               bankNumber = bankData.stk;
               bankOwner = bankData.nameTk;
               bankMap[item.banking] = { bankName, bankNumber, bankOwner }; // Store bank data
             } else {
-              console.error('Bank data not found for withdrawal:', item._id);
+              console.error("Bank data not found for withdrawal:", item._id);
             }
           } else {
             bankName = bankMap[item.banking].bankName;
@@ -2503,7 +2764,7 @@ export default class TransactionsController {
             lastName,
             bankName,
             bankNumber,
-            bankOwner
+            bankOwner,
           };
         })
       );
@@ -2513,12 +2774,6 @@ export default class TransactionsController {
       next(error);
     }
   }
-
-
-
-
-
-
 
   static async putTransactionPayment(
     req: Request,
@@ -3194,7 +3449,7 @@ export default class TransactionsController {
         return HttpResponse.returnBadRequestResponse(res, "logPayment");
       }
 
-      console.log({ data })
+      console.log({ data });
 
       return HttpResponse.returnSuccessResponse(res, data);
     } catch (e) {
@@ -3282,16 +3537,18 @@ export default class TransactionsController {
       const { user: userModel, code: codeModel } = global.mongoModel;
       const { banking: BankingModel, image: imageModel } = global.mongoModel;
 
-      const adminUser = await userModel.findOne({ role: { $in: ['master'] } });
+      const adminUser = await userModel.findOne({ role: { $in: ["master"] } });
 
       if (adminUser) {
         // Use the admin user's ID to find banking information
-        const bankMasterOptions = await BankingModel.find({ user: adminUser._id });
+        const bankMasterOptions = await BankingModel.find({
+          user: adminUser._id,
+        });
 
         return HttpResponse.returnSuccessResponse(res, bankMasterOptions);
       } else {
         // Handle the case where no admin user is found
-        return HttpResponse.returnNotFoundResponse(res, 'No admin user found');
+        return HttpResponse.returnNotFoundResponse(res, "No admin user found");
       }
       // return HttpResponse.returnSuccessResponse(res, bankMasterOptions);
     } catch (e) {
@@ -3314,17 +3571,22 @@ export default class TransactionsController {
         banking: BankingModel,
         image: imageModel,
         floor: floorModel,
-        motelRoom: motelRoomModel
+        motelRoom: motelRoomModel,
       } = global.mongoModel;
 
-      const floorData = await floorModel.findOne({ rooms: id }).lean().exec();
+      const floorData = await floorModel
+        .findOne({ rooms: id })
+        .lean()
+        .exec();
 
-      const motelData = await motelRoomModel.findOne({ floors: floorData._id }).lean().exec();
+      const motelData = await motelRoomModel
+        .findOne({ floors: floorData._id })
+        .lean()
+        .exec();
 
       const userData = await userModel.findOne({ _id: motelData.owner });
 
       console.log({ userData });
-
 
       // Use the admin user's ID to find banking information
       const bankMasterOptions = await BankingModel.find({ user: userData._id });
