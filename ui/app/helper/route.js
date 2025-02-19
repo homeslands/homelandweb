@@ -1,7 +1,10 @@
 /* eslint-disable prettier/prettier */
+import dotenv from 'dotenv';
+dotenv.config();
+
 export const urlLink = {
   api: {
-    serverUrl: process.env.REACT_APP_BASE_API_URL,
+    serverUrl: 'https://homeslands.net/api',
     auth: {
       validateToken: '/v1/auth/checkToken',
       sign_up: '/v1/auth/signUp',
