@@ -35,7 +35,7 @@ jobs:
 
       - name: Copy Environment Configuration
         env:
-          FE_ENV: ${{ secrets.FE_ENV_DEV }}
+          FE_ENV: ${{ secrets.FE_ENV_PROD }}
         run: |
           echo "$FE_ENV" > ui/.env
 
