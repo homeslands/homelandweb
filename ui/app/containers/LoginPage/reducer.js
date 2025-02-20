@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /*
  *
  * LoginPage reducer
@@ -19,8 +20,11 @@ const loginPageReducer = (state = initialState, action) =>
         draft.currentUser = action.response;
         break;
       case POST_SIGN_IN_FAIL:
-        draft.loginError = action.error.errors[0];
-        break;
+        console.log({ action });
+        if (action.error)
+          if (action.error.errors)
+            // draft.loginError = action.error.errors[0];
+            break;
     }
   });
 
