@@ -26,8 +26,6 @@ const ProtectedRoute = ({ component: Component, path, app, ...rest }) => {
   useInjectReducer({ key: 'app', reducer: appReducer });
   useInjectSaga({ key: 'app', saga: appSaga });
 
-  console.log('hello');
-
   const { isValidToken = false, currentUser = {} } = app;
   const token = localStorage.get('token');
 
