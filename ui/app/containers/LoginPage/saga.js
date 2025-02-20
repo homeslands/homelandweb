@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-underscore-dangle */
 import { put, takeLatest } from 'redux-saga/effects';
 import localStoreService from 'local-storage';
@@ -16,7 +17,7 @@ import {
 export function* apiPostSignIn(payload) {
   const { payload: data = {} } = payload;
   const requestUrl = urlLink.api.serverUrl + urlLink.api.auth.sign_in;
-  console.log({ requestUrl });
+  console.log({ requestUrl, data });
   yield put(loadRepos());
   try {
     const response = yield axios.post(requestUrl, data);
@@ -35,9 +36,13 @@ export function* apiPostSignIn(payload) {
     yield put(validateToken({ userId: userLogin._id, token }));
     yield put(push(urlLink.home));
   } catch (error) {
+    console.log({ requestUrl, error });
     if (error.response) {
-      const { data = {} } = error.response;
-      yield put(postSignInFail(data));
+      if (error.response.data) {
+        const failureData = error.response.data;
+        yield put(postSignInFail(failureData));
+      }
+      yield put(postSignInFail({}));
     } else {
       const offlineData = {
         data: [],
